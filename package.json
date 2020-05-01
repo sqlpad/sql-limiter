@@ -1,0 +1,19 @@
+{
+  "name": "sql-limiter",
+  "version": "1.0.0",
+  "description": "A very basic attempt at detecting and injecting limits for SQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rickbergfalk/sql-limiter.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rickbergfalk/sql-limiter/issues"
+  },
+  "homepage": "https://github.com/rickbergfalk/sql-limiter#readme"
+}
