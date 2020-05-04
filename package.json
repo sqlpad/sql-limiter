@@ -4,7 +4,7 @@
   "description": "A very basic attempt at detecting and injecting limits for SQL",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",
@@ -18,5 +18,8 @@
   "homepage": "https://github.com/rickbergfalk/sql-limiter#readme",
   "dependencies": {
     "moo": "^0.5.1"
+  },
+  "devDependencies": {
+    "mocha": "^7.1.2"
   }
 }
