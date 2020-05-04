@@ -1,4 +1,4 @@
-const { hasTokenValueCount } = require("./utils");
+const { hasTokens } = require("./utils");
 
 describe("token identification", function () {
   it("line comments", function () {
@@ -7,7 +7,7 @@ describe("token identification", function () {
       FROM table_a
     `;
 
-    hasTokenValueCount(
+    hasTokens(
       str,
       "lineComment",
       "-- ;this is -- /* something */ a comment",
@@ -24,7 +24,7 @@ describe("token identification", function () {
       FROM table_a
     `;
 
-    hasTokenValueCount(
+    hasTokens(
       str,
       "multiComment",
       `/* /*** ---line
@@ -34,54 +34,47 @@ describe("token identification", function () {
       1
     );
 
-    hasTokenValueCount(str, "multiComment", `/* ;{()} */`, 1);
+    hasTokens(str, "multiComment", `/* ;{()} */`, 1);
   });
 
   it("identifies operators", function () {
-    hasTokenValueCount("<> = > < <= >=", "operator", "<>", 1);
-    hasTokenValueCount("<> = > < <= >=", "operator", "=", 1);
-    hasTokenValueCount("<> = > < <= >=", "operator", ">", 1);
-    hasTokenValueCount("<> = > < <= >=", "operator", "<", 1);
-    hasTokenValueCount("<> = > < <= >=", "operator", "<=", 1);
-    hasTokenValueCount("<> = > < <= >=", "operator", ">=", 1);
+    hasTokens("<> = > < <= >=", "operator", "<>", 1);
+    hasTokens("<> = > < <= >=", "operator", "=", 1);
+    hasTokens("<> = > < <= >=", "operator", ">", 1);
+    hasTokens("<> = > < <= >=", "operator", "<", 1);
+    hasTokens("<> = > < <= >=", "operator", "<=", 1);
+    hasTokens("<> = > < <= >=", "operator", ">=", 1);
   });
 
   it("keywords are lower case", function () {
-    hasTokenValueCount("select FROM", "keyword", "select", 1);
-    hasTokenValueCount("select FROM", "keyword", "from", 1);
+    hasTokens("select FROM", "keyword", "select", 1);
+    hasTokens("select FROM", "keyword", "from", 1);
   });
 
   it("non-quoted identifiers are lower case", function () {
-    hasTokenValueCount(`FROM Table_A`, "identifier", "table_a", 1);
+    hasTokens(`FROM Table_A`, "identifier", "table_a", 1);
   });
 
   it("quoted identifiers are original case", function () {
-    hasTokenValueCount(`FROM "Table_A"`, "quotedIdentifier", "Table_A", 1);
+    hasTokens(`FROM "Table_A"`, "quotedIdentifier", "Table_A", 1);
   });
 
   it("quoted identifiers w/space", function () {
-    hasTokenValueCount(`FROM "Table A"`, "quotedIdentifier", "Table A", 1);
+    hasTokens(`FROM "Table A"`, "quotedIdentifier", "Table A", 1);
   });
 
   it("terminates as expected", function () {
-    //
+    // Ansi style
+    hasTokens(`select ; select; -- ;\n select /* ; */`, "terminator", ";", 2);
+    // Actian style
+    hasTokens(
+      `select \\g select\\g -- \\g\n select /* \\g */`,
+      "terminator",
+      "\\g",
+      2
+    );
+    // Mixed
+    hasTokens(`select ; \\g ;`, "terminator", ";", 2);
+    hasTokens(`select ; \\g ;`, "terminator", "\\g", 1);
   });
 });
-
-const query = `
-  WITH cte_a (a, b) AS (
-    select a, b
-    FROM table_a
-  )
-  SELECT a AS "col a"
-  FROM "cte_a"
-  where a = 'something' 
-  /* comment */
-  /*
-  comment; /*
-  */
- /g ; ';'
- LIMIT 100
- limit 200
- MAX(300)
-`;
