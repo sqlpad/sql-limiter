@@ -1,5 +1,5 @@
 const assert = require("assert");
-const sqlLimiter = require("../index");
+const sqlLimiter = require("../src/index");
 
 const query = `
   , ,,
