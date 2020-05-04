@@ -69,10 +69,14 @@ function getLexer() {
   });
 }
 
-function tokenize(query) {
+/**
+ * Takes SQL text and generates an array of tokens using moo
+ * @param {string} sqlText
+ */
+function tokenize(sqlText) {
   const lexer = getLexer();
   const tokens = [];
-  lexer.reset(query);
+  lexer.reset(sqlText);
   let next = lexer.next();
   while (next) {
     tokens.push(next);
@@ -81,7 +85,39 @@ function tokenize(query) {
   return tokens;
 }
 
+/**
+ * Takes SQL text and splits it by terminator
+ * Returns array of single SQL statements.
+ * Extra spaces trailing terminator are not returned for a query
+ * @param {string} sqlText
+ * @param {boolean} includeTerminators = include terminators in individual queries
+ */
+function split(sqlText, includeTerminators = false) {
+  const tokens = tokenize(sqlText);
+  const queries = [];
+  let query = "";
+  tokens.forEach((token) => {
+    if (token.type === "terminator") {
+      if (includeTerminators) {
+        query += token.text;
+      }
+      if (query.trim() !== "") {
+        queries.push(query);
+      }
+      query = "";
+    } else {
+      query += token.text;
+    }
+  });
+  // any remaining text is pushed to queries if it has something
+  if (query.trim() !== "") {
+    queries.push(query);
+  }
+  return queries;
+}
+
 module.exports = {
   getLexer,
   tokenize,
+  split,
 };
