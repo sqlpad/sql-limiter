@@ -1,6 +1,6 @@
 const { hasTokens } = require("./utils");
 
-describe("token identification", function () {
+describe("tokenize", function () {
   it("line comments", function () {
     const str = `
       select -- ;this is -- /* something */ a comment

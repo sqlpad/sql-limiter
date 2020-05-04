@@ -86,38 +86,56 @@ function tokenize(sqlText) {
 }
 
 /**
+ * Splits sql text into an array of arrays of tokens
+ * If includeTerminators is set, they are included in the token results.
+ * If a set of tokens includes only whitespace, it is not considered a query
+ * @param {string} sqlText
+ * @param {boolean} includeTerminators
+ */
+function getQueriesTokens(sqlText, includeTerminators = false) {
+  const tokens = tokenize(sqlText);
+  const queries = [];
+  let queryTokens = [];
+  tokens.forEach((token) => {
+    if (token.type === "terminator") {
+      if (includeTerminators) {
+        queryTokens.push(token);
+      }
+      if (queryTokens.filter((t) => t.type !== "whitespace").length > 0) {
+        queries.push(queryTokens);
+      }
+      queryTokens = [];
+    } else {
+      queryTokens.push(token);
+    }
+  });
+  // any remaining text is pushed to queries if it has something
+  if (queryTokens.filter((t) => t.type !== "whitespace").length > 0) {
+    queries.push(queryTokens);
+  }
+  return queries;
+}
+
+/**
  * Takes SQL text and splits it by terminator
  * Returns array of single SQL statements.
  * Extra spaces trailing terminator are not returned for a query
  * @param {string} sqlText
  * @param {boolean} includeTerminators = include terminators in individual queries
  */
-function split(sqlText, includeTerminators = false) {
-  const tokens = tokenize(sqlText);
+function getQueries(sqlText, includeTerminators = false) {
   const queries = [];
-  let query = "";
-  tokens.forEach((token) => {
-    if (token.type === "terminator") {
-      if (includeTerminators) {
-        query += token.text;
-      }
-      if (query.trim() !== "") {
-        queries.push(query);
-      }
-      query = "";
-    } else {
-      query += token.text;
-    }
-  });
-  // any remaining text is pushed to queries if it has something
-  if (query.trim() !== "") {
+  const queriesTokens = getQueriesTokens(sqlText, includeTerminators);
+  queriesTokens.forEach((queryTokens) => {
+    const query = queryTokens.map((token) => token.text).join("");
     queries.push(query);
-  }
+  });
   return queries;
 }
 
 module.exports = {
   getLexer,
+  getQueries,
+  getQueriesTokens,
   tokenize,
-  split,
 };
