@@ -1,6 +1,6 @@
 {
   "name": "sql-limiter",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A very basic attempt at detecting and injecting limits for SQL",
   "main": "index.js",
   "scripts": {
