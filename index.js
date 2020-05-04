@@ -1,60 +1,83 @@
+const fs = require("fs");
 const moo = require("moo");
 
+// Load keywords, converting all to lower case
+const keywords = fs
+  .readFileSync("./keywords.txt", "utf8")
+  .split("\n")
+  .map((kw) => kw.trim().toLowerCase())
+  .filter((kw) => Boolean(kw));
+
+// Incoming values will also be compared as lower case to make keyword matching case insensitive
 const caseInsensitiveKeywords = (defs) => {
   const keywords = moo.keywords(defs);
   return (value) => keywords(value.toLowerCase());
 };
 
-const lexer = moo.compile({
-  whitespace: /[ \t]+/,
-  lineComment: /--.*?$/,
-  multiComment: /\/\*[^]*?\*\//,
-  number: /0|[1-9][0-9]*/,
-  quotedIdentifier: /"(?:\["\\]|[^\n"\\])*"/,
-  string: /'(?:\\['\\]|[^\n'\\])*'/,
-  lparen: "(",
-  rparen: ")",
-  comma: ",",
-  equals: "=",
-  delimiter: [";", "/g"],
-  // identifier: {
-  //   match: /[a-zA-Z_0-9]+/,
-  //   type: moo.keywords({
-  //     KW: ["with", "if", "LIMIT"],
-  //   }),
-  // },
-  identifier: {
-    match: /[a-zA-Z_0-9]+/,
-    type: caseInsensitiveKeywords({ keyword: ["with", "max", "limit"] }),
-  },
-  // keyword: ["with", "while", "if", "else", "moo", "limit"],
-  newline: { match: /\n/, lineBreaks: true },
-  // identifier: /[a-zA-Z_0-9]+/,
-  myError: moo.error,
-});
+function getLexer() {
+  return moo.compile({
+    whitespace: /[ \t]+/,
+    newline: { match: /\n/, lineBreaks: true },
+    lineComment: /--.*?$/,
+    multiComment: /\/\*[^]*?\*\//,
+    lparen: "(",
+    rparen: ")",
+    comma: ",",
+    period: ".",
 
-const query = `
-  WITH cte_a (a, b) AS (
-    select a, b
-    FROM table_a
-  )
-  SELECT a AS "col a"
-  FROM "cte_a"
-  where a = 'something' 
-  /* comment */
-  /*
-  comment; /*
-  */
- /g ; ';'
- LIMIT 100
- limit 200
- max(300)
-`;
+    number: /0|[1-9][0-9]*/,
 
-lexer.reset(query);
+    // ; is standard, \g is used for Actian dbs
+    // Are there others?
+    terminator: [";", "\\g"],
 
-let next = lexer.next();
-while (next) {
-  console.log(next);
-  next = lexer.next();
+    // text == original text
+    // value == value inside quotes
+    quotedIdentifier: [
+      {
+        match: /"(?:\["\\]|[^\n"\\])*"/,
+        value: (x) => x.slice(1, -1),
+      },
+    ],
+
+    // text == original text
+    // value == value inside quotes
+    string: /'(?:\\['\\]|[^\n'\\])*'/,
+
+    // Remaining test is assumed to be an identifier of some kinds (column or table)
+    // UNLESS it matches a keyword case insensitively
+    // The value of these tokens are converted to lower case
+    identifier: {
+      match: /[a-zA-Z_0-9]+/,
+      type: caseInsensitiveKeywords({
+        keyword: keywords,
+      }),
+      value: (s) => s.toLowerCase(),
+    },
+
+    // Any combination of special characters is to be treated as an operator (as a guess anyways)
+    // Initially these were being noted here but the list is large
+    // and there is no way to know all operators since this supports anything that is SQL-ish
+    operator: {
+      match: /[<>~!@#$%^?&|`*\-{}+=:\/\\\[\]]+/,
+      lineBreaks: false,
+    },
+  });
 }
+
+function tokenize(query) {
+  const lexer = getLexer();
+  const tokens = [];
+  lexer.reset(query);
+  let next = lexer.next();
+  while (next) {
+    tokens.push(next);
+    next = lexer.next();
+  }
+  return tokens;
+}
+
+module.exports = {
+  getLexer,
+  tokenize,
+};
