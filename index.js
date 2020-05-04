@@ -35,7 +35,11 @@ function getLexer() {
     // value == value inside quotes
     quotedIdentifier: [
       {
-        match: /"(?:\["\\]|[^\n"\\])*"/,
+        match: /".*?"/,
+        value: (x) => x.slice(1, -1),
+      },
+      {
+        match: /\[.*?\]/,
         value: (x) => x.slice(1, -1),
       },
     ],

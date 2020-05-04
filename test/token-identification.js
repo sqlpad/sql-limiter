@@ -63,6 +63,16 @@ describe("token identification", function () {
     hasTokens(`FROM "Table A"`, "quotedIdentifier", "Table A", 1);
   });
 
+  it("quoted bracket identifiers", function () {
+    hasTokens(`FROM [Table A]`, "quotedIdentifier", "Table A", 1);
+    hasTokens(`FROM [Table A]`, "operator", "[", 0);
+    hasTokens(`FROM [Table A]`, "operator", "]", 0);
+  });
+
+  it("quoted identifiers w/comment", function () {
+    hasTokens(`FROM " /* /*  */"`, "quotedIdentifier", " /* /*  */", 1);
+  });
+
   it("terminates as expected", function () {
     // Ansi style
     hasTokens(`select ; select; -- ;\n select /* ; */`, "terminator", ";", 2);
