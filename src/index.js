@@ -64,7 +64,7 @@ function getLexer() {
     // Initially these were being noted here but the list is large
     // and there is no way to know all operators since this supports anything that is SQL-ish
     operator: {
-      match: /[<>~!@#$%^?&|`*\-{}+=:\/\\\[\]]+/,
+      match: /[<>~!@#$%^?&|`*\-{}+=:/\\[\]]+/,
       lineBreaks: false,
     },
   });
@@ -91,30 +91,19 @@ function tokenize(sqlText) {
  * If includeTerminators is set, they are included in the token results.
  * If a set of tokens includes only whitespace, it is not considered a query
  * @param {string} sqlText
- * @param {boolean} includeTerminators
  */
-function getQueriesTokens(sqlText, includeTerminators = false) {
+function getQueriesTokens(sqlText) {
   const tokens = tokenize(sqlText);
-  const queries = [];
+  const queriesTokens = [];
   let queryTokens = [];
   tokens.forEach((token) => {
+    queryTokens.push(token);
     if (token.type === "terminator") {
-      if (includeTerminators) {
-        queryTokens.push(token);
-      }
-      if (queryTokens.filter((t) => t.type !== "whitespace").length > 0) {
-        queries.push(queryTokens);
-      }
+      queriesTokens.push(queryTokens);
       queryTokens = [];
-    } else {
-      queryTokens.push(token);
     }
   });
-  // any remaining text is pushed to queries if it has something
-  if (queryTokens.filter((t) => t.type !== "whitespace").length > 0) {
-    queries.push(queryTokens);
-  }
-  return queries;
+  return queriesTokens;
 }
 
 /**
@@ -128,8 +117,26 @@ function getQueries(sqlText, includeTerminators = false) {
   const queries = [];
   const queriesTokens = getQueriesTokens(sqlText, includeTerminators);
   queriesTokens.forEach((queryTokens) => {
-    const query = queryTokens.map((token) => token.text).join("");
-    queries.push(query);
+    // if set of tokens has something other than whitespace/terminators, consider it
+    if (
+      queryTokens.filter(
+        (t) =>
+          t.type !== "whitespace" &&
+          t.type !== "terminator" &&
+          t.type !== "newline"
+      ).length > 0
+    ) {
+      if (includeTerminators) {
+        const query = queryTokens.map((token) => token.text).join("");
+        queries.push(query);
+      } else {
+        const query = queryTokens
+          .filter((token) => token.type !== "terminator")
+          .map((token) => token.text)
+          .join("");
+        queries.push(query);
+      }
+    }
   });
   return queries;
 }
