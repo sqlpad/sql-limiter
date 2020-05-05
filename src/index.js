@@ -107,6 +107,88 @@ function getQueriesTokens(sqlText) {
 }
 
 /**
+ * Find if a query is a select query or not.
+ * CTEs *may* be a select. They could also be inserts/updates
+ * @param {array<object>} queryTokens
+ */
+function getStatementKeyword(queryTokens = []) {
+  // Queries could be wrapped in parens (WITH something AS (some query) SELECT 'hello' AS world;)
+  // In event that this query wrapped in parents, this needs to track what level of parens need the limit injected into
+  let parenLevel = 0;
+  let targetParenLevel = 0;
+  let firstKeyword = "";
+  // statementKeyword will be `select`, `insert`, `alter`, etc.
+  // keywords `with` and `as` not included to filter out cte
+  let statementKeyword = "";
+  let statementkeywordIndex;
+
+  for (let index = 0; index < queryTokens.length; index++) {
+    const token = queryTokens[index];
+    if (token.type === "lparen") {
+      parenLevel++;
+    } else if (token.type === "rparen") {
+      parenLevel--;
+    } else if (token.type === "keyword") {
+      // If first keyword is not identified yet, record this value
+      // If first keyword is `with` we know this is a CTE
+      if (!firstKeyword) {
+        firstKeyword = token.value;
+        targetParenLevel = parenLevel;
+      }
+      // Statement keyword we are considering not something found in prep of CTE
+      // If the current keyword isn't a `with` and not `as`, and at the same level as our targetParenLevel,
+      // We can assume it tells us what kind of query we are dealing with.
+      // Consider queries like the following queries
+      //
+      // WITH cte AS (...) SELECT ...
+      // WITH cte AS (...) INSERT INTO ... SELECT
+      // WITH cte AS (...) UPDATE ... FROM ...
+      // (WITH cte AS (...) SELECT ...)
+      if (
+        !statementKeyword &&
+        targetParenLevel === parenLevel &&
+        token.value !== "with" &&
+        token.value !== "as"
+      ) {
+        statementKeyword = token.value;
+
+        if (statementKeyword === "select") {
+          statementkeywordIndex = index;
+        }
+
+        // We've identified the statement keyword
+        // We can exit the loop
+        index = queryTokens.length;
+      }
+    }
+  }
+
+  return {
+    selectIndex: statementkeywordIndex,
+    statementKeyword,
+    targetParenLevel,
+  };
+}
+
+// function hasTopOrFirst() {
+//   // TODO
+// }
+
+// function hasLimit() {
+//   // TODO
+// }
+
+// /**
+//  * Find if a limit is set, and enforce it or add it depending on the scenario
+//  * @param {array<object>} queryTokens
+//  * @param {number} enforcedLimit - limit to enforce
+//  * @param {string} limitType - LIMIT, TOP, FIRST
+//  */
+// function limitize(queryTokens = [], enforcedLimit, limitType = "LIMIT") {
+//   // TODO
+// }
+
+/**
  * Takes SQL text and splits it by terminator
  * Returns array of single SQL statements.
  * Extra spaces trailing terminator are not returned for a query
@@ -142,8 +224,7 @@ function getQueries(sqlText, includeTerminators = false) {
 }
 
 module.exports = {
-  getLexer,
   getQueries,
-  getQueriesTokens,
   tokenize,
+  getStatementKeyword,
 };
