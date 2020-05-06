@@ -15,67 +15,64 @@ const caseInsensitiveKeywords = (defs) => {
   return (value) => keywords(value.toLowerCase());
 };
 
-function getLexer() {
-  return moo.compile({
-    whitespace: /[ \t]+/,
-    newline: { match: /\n/, lineBreaks: true },
-    lineComment: /--.*?$/,
-    multiComment: /\/\*[^]*?\*\//,
-    lparen: "(",
-    rparen: ")",
-    comma: ",",
-    period: ".",
+const lexer = moo.compile({
+  whitespace: /[ \t]+/,
+  newline: { match: /\n/, lineBreaks: true },
+  lineComment: /--.*?$/,
+  multiComment: /\/\*[^]*?\*\//,
+  lparen: "(",
+  rparen: ")",
+  comma: ",",
+  period: ".",
 
-    number: /0|[1-9][0-9]*/,
+  number: /0|[1-9][0-9]*/,
 
-    // ; is standard, \g is used for Actian dbs
-    // Are there others?
-    terminator: [";", "\\g"],
+  // ; is standard, \g is used for Actian dbs
+  // Are there others?
+  terminator: [";", "\\g"],
 
-    // text == original text
-    // value == value inside quotes
-    quotedIdentifier: [
-      {
-        match: /".*?"/,
-        value: (x) => x.slice(1, -1),
-      },
-      {
-        match: /\[.*?\]/,
-        value: (x) => x.slice(1, -1),
-      },
-    ],
-
-    // text == original text
-    // value == value inside quotes
-    string: /'(?:\\['\\]|[^\n'\\])*'/,
-
-    // Remaining test is assumed to be an identifier of some kinds (column or table)
-    // UNLESS it matches a keyword case insensitively
-    // The value of these tokens are converted to lower case
-    identifier: {
-      match: /[a-zA-Z_0-9]+/,
-      type: caseInsensitiveKeywords({
-        keyword: keywords,
-      }),
-      value: (s) => s.toLowerCase(),
+  // text == original text
+  // value == value inside quotes
+  quotedIdentifier: [
+    {
+      match: /".*?"/,
+      value: (x) => x.slice(1, -1),
     },
-
-    // Any combination of special characters is to be treated as an operator (as a guess anyways)
-    // Initially these were being noted here but the list is large
-    // and there is no way to know all operators since this supports anything that is SQL-ish
-    operator: {
-      match: /[<>~!@#$%^?&|`*\-{}+=:/\\[\]]+/,
-      lineBreaks: false,
+    {
+      match: /\[.*?\]/,
+      value: (x) => x.slice(1, -1),
     },
-  });
-}
+  ],
+
+  // text == original text
+  // value == value inside quotes
+  string: /'(?:\\['\\]|[^\n'\\])*'/,
+
+  // Remaining test is assumed to be an identifier of some kinds (column or table)
+  // UNLESS it matches a keyword case insensitively
+  // The value of these tokens are converted to lower case
+  identifier: {
+    match: /[a-zA-Z_0-9]+/,
+    type: caseInsensitiveKeywords({
+      keyword: keywords,
+    }),
+    value: (s) => s.toLowerCase(),
+  },
+
+  // Any combination of special characters is to be treated as an operator (as a guess anyways)
+  // Initially these were being noted here but the list is large
+  // and there is no way to know all operators since this supports anything that is SQL-ish
+  operator: {
+    match: /[<>~!@#$%^?&|`*\-{}+=:/\\[\]]+/,
+    lineBreaks: false,
+  },
+});
 
 /**
  * Takes SQL text and generates an array of tokens using moo
  * @param {string} sqlText
  */
 function tokenize(sqlText) {
-  const lexer = getLexer();
   const tokens = [];
   lexer.reset(sqlText);
   let next = lexer.next();
