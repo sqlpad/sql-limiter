@@ -240,14 +240,15 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
     );
 
     // If not found for some reason, or type is not a number, return queryTokens untouched
+    // TODO - should this throw an error?
+    // This is an unexpected result and not sure how to handle
+    // Moo would throw. We should probably as well
     if (!next || next.type !== "number") {
       return queryTokens;
     }
 
-    const n = parseInt(next.value, 10);
-
     // If the number if over the limit, reset it
-    if (n > limit) {
+    if (parseInt(next.value, 10) > limit) {
       const firstHalf = queryTokens.slice(0, next.index);
       const secondhalf = queryTokens.slice(next.index + 1);
       return [
@@ -260,19 +261,96 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
   }
 }
 
-// function hasLimit() {
-//   // TODO
-// }
+function firstKeywordFromEnd(queryTokens, targetParenLevel) {
+  let level = 0;
+  for (let i = queryTokens.length - 1; i >= 0; i--) {
+    const token = queryTokens[i];
+    if (token.type === "rparen") {
+      level++;
+    } else if (token.type === "lparen") {
+      level--;
+    } else if (token.type === "keyword" && level === targetParenLevel) {
+      return { ...token, index: i };
+    }
+  }
+}
 
-// /**
-//  * Find if a limit is set, and enforce it or add it depending on the scenario
-//  * @param {array<object>} queryTokens
-//  * @param {number} enforcedLimit - limit to enforce
-//  * @param {string} limitType - LIMIT, TOP, FIRST
-//  */
-// function limitize(queryTokens = [], enforcedLimit, limitType = "LIMIT") {
-//   // TODO
-// }
+function enforceLimit(queryTokens, limit) {
+  const { statementKeyword, targetParenLevel } = getStatementType(queryTokens);
+
+  // If not dealing with a select return tokens unaltered
+  if (statementKeyword !== "select") {
+    return queryTokens;
+  }
+
+  // Limits go at the end, so we are going to rewind from end and find first keyword
+  // if that first keyword is `limit`, we'll enforce the limit
+  // if that keyword is not limit, we need to add limit
+  const keywordFromEnd = firstKeywordFromEnd(queryTokens, targetParenLevel);
+  if (keywordFromEnd.value !== "limit") {
+    // limit is not there so inject it
+    const injectedTokens = [
+      {
+        type: "whitespace",
+        text: " ",
+        value: " ",
+      },
+      {
+        type: "keyword",
+        text: "limit",
+        value: "limit",
+      },
+      {
+        type: "whitespace",
+        text: " ",
+        value: " ",
+      },
+      {
+        type: "number",
+        text: `${limit}`,
+        value: `${limit}`,
+      },
+    ];
+
+    // if last it terminator inject before it
+    // otherwise just append to end
+    if (queryTokens[queryTokens.length - 1].type === "terminator") {
+      const firstHalf = queryTokens.slice(0, queryTokens.length - 1);
+      const secondhalf = queryTokens.slice(queryTokens.length - 1);
+      return [...firstHalf, ...injectedTokens, ...secondhalf];
+    } else {
+      return [...queryTokens, ...injectedTokens];
+    }
+  } else {
+    // limit is there, so find next number and validate
+    // is the next non-whitespace non-comment a number?
+    // If so, enforce that number be no larger than limit
+    const next = nextNonCommentNonWhitespace(
+      queryTokens,
+      keywordFromEnd.index + 1
+    );
+
+    // If not found for some reason, or type is not a number, return queryTokens untouched
+    // TODO - should this throw an error?
+    // This is an unexpected result and not sure how to handle
+    // Moo would throw. We should probably as well
+    if (!next || next.type !== "number") {
+      return queryTokens;
+    }
+
+    // If the number if over the limit, reset it
+    if (parseInt(next.value, 10) > limit) {
+      const firstHalf = queryTokens.slice(0, next.index);
+      const secondhalf = queryTokens.slice(next.index + 1);
+      return [
+        ...firstHalf,
+        { ...next, text: limit, value: limit },
+        ...secondhalf,
+      ];
+    }
+    return queryTokens;
+  }
+}
 
 /**
  * Takes SQL text and splits it by terminator
@@ -310,9 +388,10 @@ function getQueries(sqlText, includeTerminators = false) {
 }
 
 module.exports = {
+  enforceLimit,
+  enforceTopOrFirst,
   getQueries,
   getQueriesTokens,
-  tokenize,
   getStatementType,
-  enforceTopOrFirst,
+  tokenize,
 };
