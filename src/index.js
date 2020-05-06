@@ -88,8 +88,6 @@ function tokenize(sqlText) {
 
 /**
  * Splits sql text into an array of arrays of tokens
- * If includeTerminators is set, they are included in the token results.
- * If a set of tokens includes only whitespace, it is not considered a query
  * @param {string} sqlText
  */
 function getQueriesTokens(sqlText) {
@@ -103,6 +101,8 @@ function getQueriesTokens(sqlText) {
       queryTokens = [];
     }
   });
+  // push last set
+  queriesTokens.push(queryTokens);
   return queriesTokens;
 }
 
@@ -111,12 +111,11 @@ function getQueriesTokens(sqlText) {
  * CTEs *may* be a select. They could also be inserts/updates
  * @param {array<object>} queryTokens
  */
-function getStatementKeyword(queryTokens = []) {
+function getStatementType(queryTokens = []) {
   // Queries could be wrapped in parens (WITH something AS (some query) SELECT 'hello' AS world;)
   // In event that this query wrapped in parents, this needs to track what level of parens need the limit injected into
   let parenLevel = 0;
-  let targetParenLevel = 0;
-  let firstKeyword = "";
+  let targetParenLevel;
   // statementKeyword will be `select`, `insert`, `alter`, etc.
   // keywords `with` and `as` not included to filter out cte
   let statementKeyword = "";
@@ -129,10 +128,10 @@ function getStatementKeyword(queryTokens = []) {
     } else if (token.type === "rparen") {
       parenLevel--;
     } else if (token.type === "keyword") {
-      // If first keyword is not identified yet, record this value
-      // If first keyword is `with` we know this is a CTE
-      if (!firstKeyword) {
-        firstKeyword = token.value;
+      // If targetParenLevel has not yet been set,
+      // we are dealing with the first keyword, which informs us of the "level"
+      // we want to consider for finding SELECT and TOP/FIRST/LIMIT
+      if (targetParenLevel === undefined) {
         targetParenLevel = parenLevel;
       }
       // Statement keyword we are considering not something found in prep of CTE
@@ -151,10 +150,7 @@ function getStatementKeyword(queryTokens = []) {
         token.value !== "as"
       ) {
         statementKeyword = token.value;
-
-        if (statementKeyword === "select") {
-          statementkeywordIndex = index;
-        }
+        statementkeywordIndex = index;
 
         // We've identified the statement keyword
         // We can exit the loop
@@ -164,7 +160,7 @@ function getStatementKeyword(queryTokens = []) {
   }
 
   return {
-    selectIndex: statementkeywordIndex,
+    statementkeywordIndex,
     statementKeyword,
     targetParenLevel,
   };
@@ -197,7 +193,7 @@ function getStatementKeyword(queryTokens = []) {
  */
 function getQueries(sqlText, includeTerminators = false) {
   const queries = [];
-  const queriesTokens = getQueriesTokens(sqlText, includeTerminators);
+  const queriesTokens = getQueriesTokens(sqlText);
   queriesTokens.forEach((queryTokens) => {
     // if set of tokens has something other than whitespace/terminators, consider it
     if (
@@ -225,6 +221,7 @@ function getQueries(sqlText, includeTerminators = false) {
 
 module.exports = {
   getQueries,
+  getQueriesTokens,
   tokenize,
-  getStatementKeyword,
+  getStatementType,
 };
