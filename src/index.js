@@ -27,7 +27,7 @@ const lexer = moo.compile({
 
   number: /0|[1-9][0-9]*/,
 
-  // ; is standard, \g is used for Actian dbs
+  // ; is standard, \g is a shortcut used in psql and Actian tooling
   // Are there others?
   terminator: [";", "\\g"],
 
