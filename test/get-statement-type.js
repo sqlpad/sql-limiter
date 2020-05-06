@@ -11,14 +11,12 @@ describe("getStatementType", function () {
     const res = get(`SELECT * FROM something`);
     assert.equal(res.statementkeywordIndex, 0);
     assert.equal(res.statementKeyword, "select");
-    assert.equal(res.targetParenLevel, 0);
   });
 
   it("identifies select in paren", function () {
     const res = get(`(select * from something)`);
     assert.equal(res.statementkeywordIndex, 1);
     assert.equal(res.statementKeyword, "select");
-    assert.equal(res.targetParenLevel, 1);
   });
 
   it("handles cte", function () {
@@ -34,6 +32,5 @@ describe("getStatementType", function () {
     `);
     assert.equal(res.statementkeywordIndex, 50);
     assert.equal(res.statementKeyword, "insert");
-    assert.equal(res.targetParenLevel, 0);
   });
 });

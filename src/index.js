@@ -162,13 +162,105 @@ function getStatementType(queryTokens = []) {
   return {
     statementkeywordIndex,
     statementKeyword,
-    targetParenLevel,
   };
 }
 
-// function hasTopOrFirst() {
-//   // TODO
-// }
+function nextKeyword(tokens, startingIndex) {
+  let level = 0;
+  for (let i = startingIndex; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === "lparen") {
+      level++;
+    } else if (token.type === "rparen") {
+      level--;
+    } else if (token.type === "keyword" && level === 0) {
+      return { ...token, index: i };
+    }
+  }
+}
+
+function nextNonCommentNonWhitespace(tokens, startingIndex) {
+  const ignoreTypes = ["whitespace", "newline", "lineComment", "multiComment"];
+  for (let i = startingIndex; i < tokens.length; i++) {
+    const token = tokens[i];
+    const shouldIgnore = ignoreTypes.includes(token.type);
+    if (!shouldIgnore) {
+      return { ...token, index: i };
+    }
+  }
+}
+
+function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
+  const { statementKeyword, statementkeywordIndex } = getStatementType(
+    queryTokens
+  );
+
+  // If not dealing with a select return tokens unaltered
+  if (statementKeyword !== "select") {
+    return queryTokens;
+  }
+
+  const nextKeywordToken = nextKeyword(queryTokens, statementkeywordIndex + 1);
+  if (nextKeywordToken.value !== limitKeyword.toLowerCase()) {
+    // not there so inject it
+    const injectedTokens = [
+      {
+        type: "whitespace",
+        text: " ",
+        value: " ",
+      },
+      {
+        type: "keyword",
+        text: limitKeyword,
+        value: limitKeyword.toLowerCase(),
+      },
+      {
+        type: "whitespace",
+        text: " ",
+        value: " ",
+      },
+      {
+        type: "number",
+        text: `${limit}`,
+        value: `${limit}`,
+      },
+      {
+        type: "whitespace",
+        text: " ",
+        value: " ",
+      },
+    ];
+    const firstHalf = queryTokens.slice(0, statementkeywordIndex + 1);
+    const secondhalf = queryTokens.slice(statementkeywordIndex + 1);
+    return [...firstHalf, ...injectedTokens, ...secondhalf];
+  } else {
+    // is the next non-whitespace non-comment a number?
+    // If so, enforce that number be no larger than limit
+    const next = nextNonCommentNonWhitespace(
+      queryTokens,
+      nextKeywordToken.index + 1
+    );
+
+    // If not found for some reason, or type is not a number, return queryTokens untouched
+    if (!next || next.type !== "number") {
+      return queryTokens;
+    }
+
+    const n = parseInt(next.value, 10);
+
+    // If the number if over the limit, reset it
+    if (n > limit) {
+      const firstHalf = queryTokens.slice(0, next.index);
+      const secondhalf = queryTokens.slice(next.index + 1);
+      return [
+        ...firstHalf,
+        { ...next, text: limit, value: limit },
+        ...secondhalf,
+      ];
+    }
+    return queryTokens;
+  }
+}
 
 // function hasLimit() {
 //   // TODO
@@ -224,4 +316,5 @@ module.exports = {
   getQueriesTokens,
   tokenize,
   getStatementType,
+  enforceTopOrFirst,
 };
