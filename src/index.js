@@ -159,6 +159,7 @@ function getStatementType(queryTokens = []) {
   return {
     statementkeywordIndex,
     statementKeyword,
+    targetParenLevel,
   };
 }
 
