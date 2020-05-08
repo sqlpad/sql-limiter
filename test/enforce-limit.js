@@ -1,5 +1,5 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/index");
+const sqlLimiter = require("../src/utils");
 
 describe("enforceLimit", function () {
   it("basic limit not existing", function () {

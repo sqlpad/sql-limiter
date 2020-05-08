@@ -1,5 +1,5 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/index");
+const sqlLimiter = require("../src/utils");
 
 function hasTokens(str, type, value, count) {
   const tokens = sqlLimiter.tokenize(str);
