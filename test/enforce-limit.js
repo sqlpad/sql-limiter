@@ -38,9 +38,8 @@ describe("enforceLimit", function () {
     );
   });
 
-  it("handles unexpected limit", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something limit`);
-    assert.equal(enforcedSql, `SELECT * FROM something limit`);
+  it("throws for unexpected limit", function () {
+    assert.throws(() => enforceFirst(`SELECT * FROM something limit`));
   });
 
   it("handles offset", function () {

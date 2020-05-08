@@ -247,12 +247,13 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
     nextKeywordToken.index + 1
   );
 
-  // If not found for some reason, or type is not a number, return queryTokens untouched
-  // TODO - should this throw an error?
-  // This is an unexpected result and not sure how to handle
-  // Moo would throw. We should probably as well
-  if (!next || next.type !== "number") {
-    return queryTokens;
+  // If not found for some reason, or type is not a number, this doesnt know what to do
+  // throw an error.
+  if (!next) {
+    throw new Error("Unexpected end of statement");
+  }
+  if (next.type !== "number") {
+    throw new Error(`Expected number got ${next.type}`);
   }
 
   // If the number if over the limit, reset it
@@ -350,12 +351,13 @@ function enforceLimit(queryTokens, limit) {
     keywordFromEnd.index + 1
   );
 
-  // If not found for some reason, or type is not a number, return queryTokens untouched
-  // TODO - should this throw an error?
-  // This is an unexpected result and not sure how to handle
-  // Moo would throw. We should probably as well
-  if (!next || next.type !== "number") {
-    return queryTokens;
+  // If not found for some reason, or type is not a number, this doesnt know what to do
+  // throw an error.
+  if (!next) {
+    throw new Error("Unexpected end of statement");
+  }
+  if (next.type !== "number") {
+    throw new Error(`Expected number got ${next.type}`);
   }
 
   // If the number if over the limit, reset it

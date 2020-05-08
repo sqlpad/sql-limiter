@@ -43,8 +43,7 @@ describe("enforceTopOrFirst", function () {
   });
 
   it("handles unexpected top", function () {
-    const enforcedSql = enforceFirst(`SELECT top * FROM something`, "top");
-    assert.equal(enforcedSql, `SELECT top * FROM something`);
+    assert.throws(() => enforceFirst(`SELECT top * FROM something`, "top"));
   });
 
   it("ignores non-select", function () {
