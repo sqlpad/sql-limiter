@@ -16,10 +16,9 @@ const caseInsensitiveKeywords = (defs) => {
 };
 
 const lexer = moo.compile({
-  whitespace: /[ \t]+/,
-  newline: { match: /\n/, lineBreaks: true },
-  lineComment: /--.*?$/,
-  multiComment: /\/\*[^]*?\*\//,
+  whitespace: [/[ \t]+/, { match: /\n/, lineBreaks: true }],
+  // First expression is --line comment, second is /* multi line */
+  comment: [/--.*?$/, /\/\*[^]*?\*\//],
   lparen: "(",
   rparen: ")",
   comma: ",",
@@ -45,7 +44,6 @@ const lexer = moo.compile({
   ],
 
   // text == original text
-  // value == value inside quotes
   string: /'(?:\\['\\]|[^\n'\\])*'/,
 
   // Remaining test is assumed to be an identifier of some kinds (column or table)
@@ -178,7 +176,7 @@ function nextKeyword(tokens, startingIndex) {
 }
 
 function nextNonCommentNonWhitespace(tokens, startingIndex) {
-  const ignoreTypes = ["whitespace", "newline", "lineComment", "multiComment"];
+  const ignoreTypes = ["whitespace", "comment"];
   for (let i = startingIndex; i < tokens.length; i++) {
     const token = tokens[i];
     const shouldIgnore = ignoreTypes.includes(token.type);
@@ -366,10 +364,7 @@ function getQueries(sqlText, includeTerminators = false) {
     // if set of tokens has something other than whitespace/terminators, consider it
     if (
       queryTokens.filter(
-        (t) =>
-          t.type !== "whitespace" &&
-          t.type !== "terminator" &&
-          t.type !== "newline"
+        (t) => t.type !== "whitespace" && t.type !== "terminator"
       ).length > 0
     ) {
       if (includeTerminators) {

@@ -7,12 +7,7 @@ describe("tokenize", function () {
       FROM table_a
     `;
 
-    hasTokens(
-      str,
-      "lineComment",
-      "-- ;this is -- /* something */ a comment",
-      1
-    );
+    hasTokens(str, "comment", "-- ;this is -- /* something */ a comment", 1);
   });
 
   it("multiline comments", function () {
@@ -26,7 +21,7 @@ describe("tokenize", function () {
 
     hasTokens(
       str,
-      "multiComment",
+      "comment",
       `/* /*** ---line
       -- /*
       comment
@@ -34,7 +29,7 @@ describe("tokenize", function () {
       1
     );
 
-    hasTokens(str, "multiComment", `/* ;{()} */`, 1);
+    hasTokens(str, "comment", `/* ;{()} */`, 1);
   });
 
   it("identifies operators", function () {
