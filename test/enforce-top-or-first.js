@@ -1,65 +1,45 @@
 const assert = require("assert");
 const sqlLimiter = require("../src/utils");
 
+function enforceFirst(sqlText, keyword) {
+  const queriesTokens = sqlLimiter.getQueriesTokens(sqlText);
+  const queryTokens = sqlLimiter.enforceTopOrFirst(
+    queriesTokens[0],
+    keyword,
+    1000
+  );
+  return queryTokens.map((t) => t.text).join("");
+}
+
 describe("enforceTopOrFirst", function () {
   it("basic top not existing", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(`SELECT * FROM something`);
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.value).join("");
-    assert.equal(enforcedSql, "select top 1000  * from something");
+    const enforcedSql = enforceFirst(`SELECT * FROM something`, "top");
+    assert.equal(enforcedSql, "SELECT top 1000  * FROM something");
   });
 
   it("basic first not existing", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(`SELECT * FROM something`);
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "first",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.value).join("");
-    assert.equal(enforcedSql, "select first 1000  * from something");
+    const enforcedSql = enforceFirst(`SELECT * FROM something`, "first");
+    assert.equal(enforcedSql, "SELECT first 1000  * FROM something");
   });
 
   it("basic top existing, under", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT top 10 * FROM something`
-    );
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.value).join("");
-    assert.equal(enforcedSql, "select top 10 * from something");
+    const enforcedSql = enforceFirst(`SELECT top 10 * FROM something`, "top");
+    assert.equal(enforcedSql, "SELECT top 10 * FROM something");
   });
 
   it("basic top existing, over", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT top 99999 * FROM something`
+    const enforcedSql = enforceFirst(
+      `SELECT top 99999 * FROM something`,
+      "top"
     );
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
     assert.equal(enforcedSql, "SELECT top 1000 * FROM something");
   });
 
   it("cte top existing, over", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `WITH cte AS (SELECT TOP 1 * FROM foo) SELECT top 99999 * FROM something`
+    const enforcedSql = enforceFirst(
+      `WITH cte AS (SELECT TOP 1 * FROM foo) SELECT top 99999 * FROM something`,
+      "top"
     );
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
     assert.equal(
       enforcedSql,
       "WITH cte AS (SELECT TOP 1 * FROM foo) SELECT top 1000 * FROM something"
@@ -67,28 +47,15 @@ describe("enforceTopOrFirst", function () {
   });
 
   it("handles unexpected top", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT top * FROM something`
-    );
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT top * FROM something`, "top");
     assert.equal(enforcedSql, `SELECT top * FROM something`);
   });
 
   it("ignores non-select", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `INSERT INTO foo SELECT * FROM something`
+    const enforcedSql = enforceFirst(
+      `INSERT INTO foo SELECT * FROM something`,
+      "top"
     );
-    const queryTokens = sqlLimiter.enforceTopOrFirst(
-      queriesTokens[0],
-      "TOP",
-      1000
-    );
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
     assert.equal(enforcedSql, `INSERT INTO foo SELECT * FROM something`);
   });
 });

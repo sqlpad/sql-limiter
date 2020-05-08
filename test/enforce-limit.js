@@ -1,45 +1,37 @@
 const assert = require("assert");
 const sqlLimiter = require("../src/utils");
 
+function enforceFirst(sqlText) {
+  const queriesTokens = sqlLimiter.getQueriesTokens(sqlText);
+  const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
+  return queryTokens.map((t) => t.text).join("");
+}
+
 describe("enforceLimit", function () {
   it("basic limit not existing", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(`SELECT * FROM something`);
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something`);
     assert.equal(enforcedSql, "SELECT * FROM something limit 1000");
   });
 
   it("basic limit not existing with semi", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(`SELECT * FROM something;`);
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something;`);
     assert.equal(enforcedSql, "SELECT * FROM something limit 1000;");
   });
 
   it("basic limit existing, under", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT * FROM something LIMIT 10;`
-    );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something LIMIT 10;`);
     assert.equal(enforcedSql, "SELECT * FROM something LIMIT 10;");
   });
 
   it("basic limit existing, over", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT * FROM something LIMIT 9999;`
-    );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something LIMIT 9999;`);
     assert.equal(enforcedSql, "SELECT * FROM something LIMIT 1000;");
   });
 
   it("cte limit existing, over", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
+    const enforcedSql = enforceFirst(
       `WITH cte AS (SELECT TOP 1 * FROM foo LIMIT 10) SELECT * FROM something LIMIT 9999 ;`
     );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
     assert.equal(
       enforcedSql,
       "WITH cte AS (SELECT TOP 1 * FROM foo LIMIT 10) SELECT * FROM something LIMIT 1000 ;"
@@ -47,38 +39,24 @@ describe("enforceLimit", function () {
   });
 
   it("handles unexpected limit", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT * FROM something limit`
-    );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something limit`);
     assert.equal(enforcedSql, `SELECT * FROM something limit`);
   });
 
   it("handles offset", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
+    const enforcedSql = enforceFirst(
       `SELECT * FROM something limit 9999 OFFSET 10`
     );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
     assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
   });
 
   it("handles offset no limit", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `SELECT * FROM something OFFSET 10`
-    );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`SELECT * FROM something OFFSET 10`);
     assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
   });
 
   it("ignores non-select", function () {
-    let queriesTokens = sqlLimiter.getQueriesTokens(
-      `INSERT INTO foo SELECT * FROM something`
-    );
-    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
-    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    const enforcedSql = enforceFirst(`INSERT INTO foo SELECT * FROM something`);
     assert.equal(enforcedSql, `INSERT INTO foo SELECT * FROM something`);
   });
 });

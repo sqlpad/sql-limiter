@@ -35,8 +35,8 @@ const keywords = fs
 
 // Incoming values will also be compared as lower case to make keyword matching case insensitive
 const caseInsensitiveKeywords = (defs) => {
-  const keywords = moo.keywords(defs);
-  return (value) => keywords(value.toLowerCase());
+  const defineKeywords = moo.keywords(defs);
+  return (value) => defineKeywords(value.toLowerCase());
 };
 
 const lexer = moo.compile({
@@ -200,6 +200,7 @@ function nextKeyword(tokens, startingIndex) {
       return { ...token, index: i };
     }
   }
+  return null;
 }
 
 function nextNonCommentNonWhitespace(tokens, startingIndex) {
@@ -211,6 +212,7 @@ function nextNonCommentNonWhitespace(tokens, startingIndex) {
       return { ...token, index: i };
     }
   }
+  return null;
 }
 
 function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
@@ -236,34 +238,34 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
     const firstHalf = queryTokens.slice(0, statementkeywordIndex + 1);
     const secondhalf = queryTokens.slice(statementkeywordIndex + 1);
     return [...firstHalf, ...injectedTokens, ...secondhalf];
-  } else {
-    // is the next non-whitespace non-comment a number?
-    // If so, enforce that number be no larger than limit
-    const next = nextNonCommentNonWhitespace(
-      queryTokens,
-      nextKeywordToken.index + 1
-    );
+  }
 
-    // If not found for some reason, or type is not a number, return queryTokens untouched
-    // TODO - should this throw an error?
-    // This is an unexpected result and not sure how to handle
-    // Moo would throw. We should probably as well
-    if (!next || next.type !== "number") {
-      return queryTokens;
-    }
+  // is the next non-whitespace non-comment a number?
+  // If so, enforce that number be no larger than limit
+  const next = nextNonCommentNonWhitespace(
+    queryTokens,
+    nextKeywordToken.index + 1
+  );
 
-    // If the number if over the limit, reset it
-    if (parseInt(next.value, 10) > limit) {
-      const firstHalf = queryTokens.slice(0, next.index);
-      const secondhalf = queryTokens.slice(next.index + 1);
-      return [
-        ...firstHalf,
-        { ...next, text: limit, value: limit },
-        ...secondhalf,
-      ];
-    }
+  // If not found for some reason, or type is not a number, return queryTokens untouched
+  // TODO - should this throw an error?
+  // This is an unexpected result and not sure how to handle
+  // Moo would throw. We should probably as well
+  if (!next || next.type !== "number") {
     return queryTokens;
   }
+
+  // If the number if over the limit, reset it
+  if (parseInt(next.value, 10) > limit) {
+    const firstHalf = queryTokens.slice(0, next.index);
+    const secondhalf = queryTokens.slice(next.index + 1);
+    return [
+      ...firstHalf,
+      { ...next, text: limit, value: limit },
+      ...secondhalf,
+    ];
+  }
+  return queryTokens;
 }
 
 function firstKeywordFromEnd(
@@ -286,6 +288,7 @@ function firstKeywordFromEnd(
       return { ...token, index: i };
     }
   }
+  return null;
 }
 
 function enforceLimit(queryTokens, limit) {
@@ -337,35 +340,35 @@ function enforceLimit(queryTokens, limit) {
 
     // No terminator just append to end
     return [...queryTokens, singleSpaceToken(), ...injectedTokens];
-  } else {
-    // limit is there, so find next number and validate
-    // is the next non-whitespace non-comment a number?
-    // If so, enforce that number be no larger than limit
-    const next = nextNonCommentNonWhitespace(
-      queryTokens,
-      keywordFromEnd.index + 1
-    );
+  }
 
-    // If not found for some reason, or type is not a number, return queryTokens untouched
-    // TODO - should this throw an error?
-    // This is an unexpected result and not sure how to handle
-    // Moo would throw. We should probably as well
-    if (!next || next.type !== "number") {
-      return queryTokens;
-    }
+  // limit is there, so find next number and validate
+  // is the next non-whitespace non-comment a number?
+  // If so, enforce that number be no larger than limit
+  const next = nextNonCommentNonWhitespace(
+    queryTokens,
+    keywordFromEnd.index + 1
+  );
 
-    // If the number if over the limit, reset it
-    if (parseInt(next.value, 10) > limit) {
-      const firstHalf = queryTokens.slice(0, next.index);
-      const secondhalf = queryTokens.slice(next.index + 1);
-      return [
-        ...firstHalf,
-        { ...next, text: limit, value: limit },
-        ...secondhalf,
-      ];
-    }
+  // If not found for some reason, or type is not a number, return queryTokens untouched
+  // TODO - should this throw an error?
+  // This is an unexpected result and not sure how to handle
+  // Moo would throw. We should probably as well
+  if (!next || next.type !== "number") {
     return queryTokens;
   }
+
+  // If the number if over the limit, reset it
+  if (parseInt(next.value, 10) > limit) {
+    const firstHalf = queryTokens.slice(0, next.index);
+    const secondhalf = queryTokens.slice(next.index + 1);
+    return [
+      ...firstHalf,
+      { ...next, text: limit, value: limit },
+      ...secondhalf,
+    ];
+  }
+  return queryTokens;
 }
 
 /**
