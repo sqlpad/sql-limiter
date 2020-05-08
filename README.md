@@ -1,6 +1,6 @@
 # sql-limiter
 
-Detects, injects, and enforces `LIMIT` (and `TOP` and `FIRST`) in to your SQL statements.
+Injects and enforces `LIMIT` (and `TOP` and `FIRST`) in your SQL statements.
 
 ```js
 const sqlLimiter = require("sql-limiter");

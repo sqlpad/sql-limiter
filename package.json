@@ -1,7 +1,18 @@
 {
   "name": "sql-limiter",
   "version": "0.0.1",
-  "description": "A very basic attempt at detecting and injecting limits for SQL",
+  "description": "Injects and enforces LIMIT in your SQL statements.",
+  "keywords": [
+    "sql",
+    "presto",
+    "sql-server",
+    "mysql",
+    "postgres",
+    "sqlite",
+    "tokenize",
+    "parser",
+    "lexer"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "mocha test",
