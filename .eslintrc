@@ -5,7 +5,6 @@
   },
   "rules": {
     "func-names": "off",
-    "global-require": "off",
     "no-plusplus": "off"
   }
 }
