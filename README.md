@@ -19,37 +19,25 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 
 ## API
 
-### `sqlLimiter.limit(sqlText, limitKeyword, limitNumber)`
-
-**Arguments**
+### `sqlLimiter.limit( sqlText, limitKeyword, limitNumber )`
 
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
 - `limitKeyword` - Keyword used to restrict rows. Must be either `limit`, `top`, or `first` (which works like `top`).
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
 
-**Returns**
+Returns `sqlText` with limits enforced.
 
-`sqlText` with limits enforced.
-
-### `sqlLimiter.getStatements(sqlText)`
-
-**Arguments**
+### `sqlLimiter.getStatements( sqlText )`
 
 - `sqlText` - SQL text to parse and split into individual statements.
 
-**Returns**
+Returns array of statement strings.
 
-Array of statement strings.
+### `sqlLimiter.removeTerminator( sqlStatement )`
 
-### `sqlLimiter.removeTerminator(sqlStatement)`
+- `sqlStatement` - Single SQL statement text to remove terminator from.
 
-**Arguments**
-
-- `sqlStatement` - SQL statement text to remove terminator from.
-
-**Returns**
-
-`sqlStatement` string with terminator removed.
+Returns `sqlStatement` string with terminator removed.
 
 ## Why
 
