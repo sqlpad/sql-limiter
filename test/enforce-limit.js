@@ -55,6 +55,24 @@ describe("enforceLimit", function () {
     assert.equal(enforcedSql, `SELECT * FROM something limit`);
   });
 
+  it("handles offset", function () {
+    let queriesTokens = sqlLimiter.getQueriesTokens(
+      `SELECT * FROM something limit 9999 OFFSET 10`
+    );
+    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
+    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
+  });
+
+  it("handles offset no limit", function () {
+    let queriesTokens = sqlLimiter.getQueriesTokens(
+      `SELECT * FROM something OFFSET 10`
+    );
+    const queryTokens = sqlLimiter.enforceLimit(queriesTokens[0], 1000);
+    const enforcedSql = queryTokens.map((t) => t.text).join("");
+    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
+  });
+
   it("ignores non-select", function () {
     let queriesTokens = sqlLimiter.getQueriesTokens(
       `INSERT INTO foo SELECT * FROM something`

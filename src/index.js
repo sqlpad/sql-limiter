@@ -2,6 +2,30 @@ const fs = require("fs");
 const moo = require("moo");
 const path = require("path");
 
+function singleSpaceToken() {
+  return {
+    type: "whitespace",
+    text: " ",
+    value: " ",
+  };
+}
+
+function keywordToken(text) {
+  return {
+    type: "keyword",
+    text,
+    value: text.toLowerCase(),
+  };
+}
+
+function numberToken(n) {
+  return {
+    type: "number",
+    text: `${n}`,
+    value: n,
+  };
+}
+
 // Load keywords, converting all to lower case
 const keywords = fs
   .readFileSync(path.join(__dirname, "keywords.txt"), "utf8")
@@ -200,31 +224,11 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
   if (nextKeywordToken.value !== limitKeyword.toLowerCase()) {
     // not there so inject it
     const injectedTokens = [
-      {
-        type: "whitespace",
-        text: " ",
-        value: " ",
-      },
-      {
-        type: "keyword",
-        text: limitKeyword,
-        value: limitKeyword.toLowerCase(),
-      },
-      {
-        type: "whitespace",
-        text: " ",
-        value: " ",
-      },
-      {
-        type: "number",
-        text: `${limit}`,
-        value: `${limit}`,
-      },
-      {
-        type: "whitespace",
-        text: " ",
-        value: " ",
-      },
+      singleSpaceToken(),
+      keywordToken(limitKeyword),
+      singleSpaceToken(),
+      numberToken(limit),
+      singleSpaceToken(),
     ];
     const firstHalf = queryTokens.slice(0, statementkeywordIndex + 1);
     const secondhalf = queryTokens.slice(statementkeywordIndex + 1);
@@ -259,7 +263,11 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
   }
 }
 
-function firstKeywordFromEnd(queryTokens, targetParenLevel) {
+function firstKeywordFromEnd(
+  queryTokens,
+  targetParenLevel,
+  excludedKeywordValues = []
+) {
   let level = 0;
   for (let i = queryTokens.length - 1; i >= 0; i--) {
     const token = queryTokens[i];
@@ -267,7 +275,11 @@ function firstKeywordFromEnd(queryTokens, targetParenLevel) {
       level++;
     } else if (token.type === "lparen") {
       level--;
-    } else if (token.type === "keyword" && level === targetParenLevel) {
+    } else if (
+      token.type === "keyword" &&
+      level === targetParenLevel &&
+      !excludedKeywordValues.includes(token.value)
+    ) {
       return { ...token, index: i };
     }
   }
@@ -284,41 +296,44 @@ function enforceLimit(queryTokens, limit) {
   // Limits go at the end, so we are going to rewind from end and find first keyword
   // if that first keyword is `limit`, we'll enforce the limit
   // if that keyword is not limit, we need to add limit
-  const keywordFromEnd = firstKeywordFromEnd(queryTokens, targetParenLevel);
+  const keywordFromEnd = firstKeywordFromEnd(queryTokens, targetParenLevel, [
+    "offset",
+  ]);
   if (keywordFromEnd.value !== "limit") {
     // limit is not there so inject it
     const injectedTokens = [
-      {
-        type: "whitespace",
-        text: " ",
-        value: " ",
-      },
-      {
-        type: "keyword",
-        text: "limit",
-        value: "limit",
-      },
-      {
-        type: "whitespace",
-        text: " ",
-        value: " ",
-      },
-      {
-        type: "number",
-        text: `${limit}`,
-        value: `${limit}`,
-      },
+      keywordToken("limit"),
+      singleSpaceToken(),
+      numberToken(limit),
     ];
 
+    // if last keyword is offset, need to put limit before that
+    const lastKeyword = firstKeywordFromEnd(queryTokens, targetParenLevel);
+    if (lastKeyword.value === "offset") {
+      const firstHalf = queryTokens.slice(0, lastKeyword.index);
+      const secondhalf = queryTokens.slice(lastKeyword.index);
+      return [
+        ...firstHalf,
+        ...injectedTokens,
+        singleSpaceToken(),
+        ...secondhalf,
+      ];
+    }
+
     // if last it terminator inject before it
-    // otherwise just append to end
     if (queryTokens[queryTokens.length - 1].type === "terminator") {
       const firstHalf = queryTokens.slice(0, queryTokens.length - 1);
       const secondhalf = queryTokens.slice(queryTokens.length - 1);
-      return [...firstHalf, ...injectedTokens, ...secondhalf];
-    } else {
-      return [...queryTokens, ...injectedTokens];
+      return [
+        ...firstHalf,
+        singleSpaceToken(),
+        ...injectedTokens,
+        ...secondhalf,
+      ];
     }
+
+    // No terminator just append to end
+    return [...queryTokens, singleSpaceToken(), ...injectedTokens];
   } else {
     // limit is there, so find next number and validate
     // is the next non-whitespace non-comment a number?
