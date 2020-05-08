@@ -1,4 +1,17 @@
-const { hasTokens } = require("./utils");
+const assert = require("assert");
+const utils = require("../src/utils");
+
+function hasTokens(str, type, value, count) {
+  const tokens = utils.tokenize(str);
+  const actualCount = tokens.filter((t) => t.value === value && t.type === type)
+    .length;
+
+  assert.equal(
+    actualCount,
+    count,
+    `hasTokens [type=${type}] [value=${value}] [count=${count}]`
+  );
+}
 
 describe("tokenize", function () {
   it("line comments", function () {

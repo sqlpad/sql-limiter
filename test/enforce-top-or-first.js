@@ -1,13 +1,9 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/utils");
+const utils = require("../src/utils");
 
 function enforceFirst(sqlText, keyword) {
-  const queriesTokens = sqlLimiter.getQueriesTokens(sqlText);
-  const queryTokens = sqlLimiter.enforceTopOrFirst(
-    queriesTokens[0],
-    keyword,
-    1000
-  );
+  const queriesTokens = utils.getQueriesTokens(sqlText);
+  const queryTokens = utils.enforceTopOrFirst(queriesTokens[0], keyword, 1000);
   return queryTokens.map((t) => t.text).join("");
 }
 

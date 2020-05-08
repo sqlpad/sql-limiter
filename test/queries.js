@@ -1,10 +1,10 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/utils");
+const utils = require("../src/utils");
 
 describe("getQueries", function () {
   it("excludes terminators", function () {
     const sql = `select -- ;\n;select 2;`;
-    const queries = sqlLimiter.getQueries(sql);
+    const queries = utils.getQueries(sql);
     assert.equal(queries.length, 2);
     assert.equal(queries[0], "select -- ;\n");
     assert.equal(queries[1], "select 2");
@@ -12,7 +12,7 @@ describe("getQueries", function () {
 
   it("includes terminators", function () {
     const sql = `select -- ;\n;select 2;`;
-    const queries = sqlLimiter.getQueries(sql, true);
+    const queries = utils.getQueries(sql, true);
     assert.equal(queries.length, 2);
     assert.equal(queries[0], "select -- ;\n;");
     assert.equal(queries[1], "select 2;");
@@ -20,7 +20,7 @@ describe("getQueries", function () {
 
   it("terminates on \\g", function () {
     const sql = `select 1\\gselect 2\\g`;
-    const queries = sqlLimiter.getQueries(sql);
+    const queries = utils.getQueries(sql);
     assert.equal(queries.length, 2);
     assert.equal(queries[0], "select 1");
     assert.equal(queries[1], "select 2");
@@ -28,7 +28,7 @@ describe("getQueries", function () {
 
   it("strips empty queries", function () {
     const sql = `select 1;; ;; select 2;   `;
-    const queries = sqlLimiter.getQueries(sql);
+    const queries = utils.getQueries(sql);
     assert.equal(queries.length, 2);
     assert.equal(queries[0], "select 1");
     assert.equal(queries[1], " select 2");

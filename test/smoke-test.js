@@ -1,5 +1,5 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/utils");
+const utils = require("../src/utils");
 
 const query = `
   , ,,
@@ -41,7 +41,7 @@ const query = `
 
 describe("smoke test", function () {
   it("tokenizes random", function () {
-    const tokens = sqlLimiter.tokenize(query);
+    const tokens = utils.tokenize(query);
     assert(tokens);
   });
 });

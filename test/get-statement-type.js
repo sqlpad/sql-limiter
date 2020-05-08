@@ -1,9 +1,9 @@
 const assert = require("assert");
-const sqlLimiter = require("../src/utils");
+const utils = require("../src/utils");
 
 function get(sql) {
-  const queriesTokens = sqlLimiter.getQueriesTokens(sql);
-  return sqlLimiter.getStatementType(queriesTokens[0]);
+  const queriesTokens = utils.getQueriesTokens(sql);
+  return utils.getStatementType(queriesTokens[0]);
 }
 
 describe("getStatementType", function () {
