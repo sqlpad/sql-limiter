@@ -1,6 +1,5 @@
-const fs = require("fs");
 const moo = require("moo");
-const path = require("path");
+const keywords = require("./keywords.js");
 
 function singleSpaceToken() {
   return {
@@ -25,13 +24,6 @@ function numberToken(n) {
     value: n,
   };
 }
-
-// Load keywords, converting all to lower case
-const keywords = fs
-  .readFileSync(path.join(__dirname, "keywords.txt"), "utf8")
-  .split("\n")
-  .map((kw) => kw.trim().toLowerCase())
-  .filter((kw) => Boolean(kw));
 
 // Incoming values will also be compared as lower case to make keyword matching case insensitive
 const caseInsensitiveKeywords = (defs) => {
