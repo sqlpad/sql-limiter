@@ -17,7 +17,8 @@
   "scripts": {
     "test": "mocha test",
     "fixlint": "eslint --fix \"**/*.js\"",
-    "lint": "eslint \"**/*.js\""
+    "lint": "eslint \"**/*.js\"",
+    "prepublishOnly": "npm test && npm run lint"
   },
   "repository": {
     "type": "git",
