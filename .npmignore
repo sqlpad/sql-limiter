@@ -1,2 +1,6 @@
 test/
+docs/
+docs-src/
+.github/workflows/nodejs.yml
 .eslintrc
+.eslintignore
