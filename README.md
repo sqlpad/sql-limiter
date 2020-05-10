@@ -2,6 +2,8 @@
 
 Injects and enforces `LIMIT` (and `TOP` and `FIRST`) in your SQL statements.
 
+[Try it](https://rickbergfalk.github.io/sql-limiter/)
+
 ```js
 const sqlLimiter = require("sql-limiter");
 
