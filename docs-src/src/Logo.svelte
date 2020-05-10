@@ -27,7 +27,7 @@
 </style>
 
 <a
-  href="https://your-url"
+  href="https://github.com/rickbergfalk/sql-limiter"
   class="github-corner"
   aria-label="View source on GitHub">
   <svg
