@@ -26,17 +26,23 @@
     display: flex;
   }
 
+  .m8 {
+    margin: 8px;
+  }
+
   .col-100 {
     box-sizing: border-box;
     width: 50%;
     flex-grow: 1;
-    margin: 8px;
   }
   .col-50 {
     box-sizing: border-box;
     width: 50%;
     flex-grow: 1;
-    margin: 8px;
+  }
+
+  #sql-in {
+    white-space: pre;
   }
 
   /* consistent styling for textarea and not */
@@ -51,40 +57,50 @@
     width: 100%;
   }
 
-  /* fixes to make pre break like a textarea */
+  .input {
+    width: 180px;
+    height: 36px;
+  }
+
   .out {
     overflow-x: auto;
-    white-space: pre-wrap;
-    white-space: -moz-pre-wrap;
-    white-space: -pre-wrap;
-    white-space: -o-pre-wrap;
-    word-wrap: break-word;
   }
 </style>
 
 <main>
   <Logo />
   <div class="row">
-    <div class="col-100">
+    <div class="col-100 m8">
       <h1>sql-limiter</h1>
 
-      <label for="limit-keyword">Limit keyword</label>
-      <select id="limit-keyword" bind:value={limitKeyword}>
-        <option value="limit">limit</option>
-        <option value="top">top</option>
-        <option value="first">first</option>
-      </select>
-      <label for="limit-number">Limit number</label>
-      <input id="limit-number" type="number" bind:value={limitNumber} />
     </div>
   </div>
 
   <div class="row">
-    <div class="col-50">
+    <div class="m8">
+      <label for="limit-keyword">Limit keyword</label>
+      <select id="limit-keyword" class="input" bind:value={limitKeyword}>
+        <option value="limit">limit</option>
+        <option value="top">top</option>
+        <option value="first">first</option>
+      </select>
+    </div>
+    <div class="m8">
+      <label for="limit-number">Limit number</label>
+      <input
+        id="limit-number"
+        class="input"
+        type="number"
+        bind:value={limitNumber} />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-50 m8">
       <label for="sql-in">input</label>
       <textarea id="sql-in" class="sql" rows="15" bind:value={original} />
     </div>
-    <div class="col-50">
+    <div class="col-50 m8">
       <label>result</label>
       <pre class="sql out">
         <SqlDiff sql={original} {limitKeyword} {limitNumber} />
