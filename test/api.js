@@ -63,8 +63,8 @@ describe("api: limit", function () {
       -- SELECT * from this_is_ignored LIMIT 9999;
       SELECT * from something limit 10 offset 99999;
       SELECT * from something limit 100 offset 99999;
-      SELECT * from something
-     limit 100`;
+      SELECT * from something limit 100
+    `;
 
     const res = sqlLimiter.limit(original, "limit", 100);
     assert.equal(res, expected);

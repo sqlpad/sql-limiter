@@ -49,6 +49,11 @@ describe("enforceLimit", function () {
     assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
   });
 
+  it("handles trailing line comment", function () {
+    const enforcedSql = enforceFirst(`SELECT * FROM something -- comment`);
+    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 -- comment`);
+  });
+
   it("handles offset no limit", function () {
     const enforcedSql = enforceFirst(`SELECT * FROM something OFFSET 10`);
     assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
