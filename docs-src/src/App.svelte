@@ -78,7 +78,7 @@
 
   <div class="row">
     <div class="m8">
-      <label for="limit-keyword">Limit keyword</label>
+      <label for="limit-keyword">limit keyword</label>
       <select id="limit-keyword" class="input" bind:value={limitKeyword}>
         <option value="limit">limit</option>
         <option value="top">top</option>
@@ -86,7 +86,7 @@
       </select>
     </div>
     <div class="m8">
-      <label for="limit-number">Limit number</label>
+      <label for="limit-number">limit number</label>
       <input
         id="limit-number"
         class="input"
