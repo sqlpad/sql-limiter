@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "sirv-cli": "^0.4.4",
-    "sql-limiter": "^1.0.1"
+    "sql-limiter": "^1.0.1",
+    "text-diff": "^1.0.1"
   }
 }
