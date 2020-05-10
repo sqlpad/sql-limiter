@@ -1,33 +1,15 @@
 <script>
   import sqlLimiter from "sql-limiter";
   import Diff from "text-diff";
+  import Logo from "./Logo.svelte";
+  import SqlDiff from "./SqlDiff.svelte";
 
-  let diff = new Diff();
-  let limited = "";
+  let limitKeyword = "limit";
+  let limitNumber = 100;
   let original = `SELECT * FROM some_table;`;
-  let textDiff;
-  let prettyHtml;
-  let error;
-
-  $: try {
-    error = null;
-    limited = sqlLimiter.limit(original, "limit", 100);
-    textDiff = diff.main(original, limited);
-    prettyHtml = diff.prettyHtml(textDiff);
-  } catch (e) {
-    error = e;
-  }
 </script>
 
 <style>
-  :global(ins) {
-    color: green;
-  }
-
-  :global(del) {
-    color: red;
-  }
-
   h1 {
     color: #ff3e00;
     font-variant: small-caps;
@@ -42,10 +24,6 @@
 
   .row {
     display: flex;
-  }
-
-  .error {
-    color: red;
   }
 
   .col-100 {
@@ -63,15 +41,14 @@
 
   /* consistent styling for textarea and not */
   .sql {
-    width: 100%;
-    font-family: monospace;
-    padding: 8px;
-    font-family: inherit;
-    font-size: inherit;
-    margin: 0;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
     border-radius: 2px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-family: monospace;
+    font-size: 14px;
+    margin: 0;
+    padding: 8px;
+    width: 100%;
   }
 
   /* fixes to make pre break like a textarea */
@@ -86,9 +63,19 @@
 </style>
 
 <main>
+  <Logo />
   <div class="row">
     <div class="col-100">
       <h1>sql-limiter</h1>
+
+      <label for="limit-keyword">Limit keyword</label>
+      <select id="limit-keyword" bind:value={limitKeyword}>
+        <option value="limit">limit</option>
+        <option value="top">top</option>
+        <option value="first">first</option>
+      </select>
+      <label for="limit-number">Limit number</label>
+      <input id="limit-number" type="number" bind:value={limitNumber} />
     </div>
   </div>
 
@@ -99,13 +86,10 @@
     </div>
     <div class="col-50">
       <label>result</label>
-      {#if error}
-        <pre class="sql out error">{error}</pre>
-      {:else}
-        <pre class="sql out">
-          {@html prettyHtml}
-        </pre>
-      {/if}
+      <pre class="sql out">
+        <SqlDiff sql={original} {limitKeyword} {limitNumber} />
+      </pre>
     </div>
   </div>
+
 </main>
