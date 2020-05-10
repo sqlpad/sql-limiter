@@ -1,5 +1,5 @@
 <script>
-  import sqlLimiter from "sql-limiter";
+  import sqlLimiter from "../../src/index.js";
   import Diff from "text-diff";
   import Logo from "./Logo.svelte";
 

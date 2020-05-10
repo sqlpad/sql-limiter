@@ -1,5 +1,4 @@
 <script>
-  import sqlLimiter from "sql-limiter";
   import Diff from "text-diff";
   import Logo from "./Logo.svelte";
   import SqlDiff from "./SqlDiff.svelte";
