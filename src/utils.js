@@ -284,6 +284,27 @@ function firstKeywordFromEnd(
   return null;
 }
 
+function findLimitInsertionIndex(queryTokens, targetParenLevel) {
+  let level = 0;
+  for (let i = queryTokens.length - 1; i >= 0; i--) {
+    const token = queryTokens[i];
+
+    if (token.type === "rparen") {
+      level++;
+    } else if (token.type === "lparen") {
+      level--;
+    } else if (
+      level === targetParenLevel &&
+      token.type !== "comment" &&
+      token.type !== "whitespace" &&
+      token.type !== "terminator"
+    ) {
+      return i + 1;
+    }
+  }
+  return -1;
+}
+
 function enforceLimit(queryTokens, limit) {
   const { statementKeyword, targetParenLevel } = getStatementType(queryTokens);
 
@@ -319,10 +340,12 @@ function enforceLimit(queryTokens, limit) {
       ];
     }
 
-    // if last it terminator inject before it
-    if (queryTokens[queryTokens.length - 1].type === "terminator") {
-      const firstHalf = queryTokens.slice(0, queryTokens.length - 1);
-      const secondhalf = queryTokens.slice(queryTokens.length - 1);
+    // Otherwise append to end,
+    // skipping past any trailing comments, whitespace, terminator
+    const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
+    if (targetIndex > -1) {
+      const firstHalf = queryTokens.slice(0, targetIndex);
+      const secondhalf = queryTokens.slice(targetIndex);
       return [
         ...firstHalf,
         singleSpaceToken(),
@@ -330,9 +353,6 @@ function enforceLimit(queryTokens, limit) {
         ...secondhalf,
       ];
     }
-
-    // No terminator just append to end
-    return [...queryTokens, singleSpaceToken(), ...injectedTokens];
   }
 
   // limit is there, so find next number and validate
