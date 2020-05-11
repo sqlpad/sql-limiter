@@ -70,6 +70,20 @@ describe("enforceLimit", function () {
     );
   });
 
+  it("Handles offset with ROWS", function () {
+    test(
+      `SELECT * FROM something OFFSET 10 ROWS ;`,
+      `SELECT * FROM something limit 1000 OFFSET 10 ROWS ;`
+    );
+  });
+
+  it("Handles offset with ROW", function () {
+    test(
+      `SELECT * FROM something OFFSET 10 ROW ;`,
+      `SELECT * FROM something limit 1000 OFFSET 10 ROW ;`
+    );
+  });
+
   it("handles offset no limit", function () {
     test(
       `SELECT * FROM something OFFSET 10`,

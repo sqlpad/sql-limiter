@@ -155,11 +155,7 @@ function hasLimit(tokens, startingIndex) {
   };
 }
 
-function firstKeywordFromEnd(
-  queryTokens,
-  targetParenLevel,
-  excludedKeywordValues = []
-) {
+function findParenLevelEndIndex(queryTokens, targetParenLevel) {
   let level = 0;
   for (let i = queryTokens.length - 1; i >= 0; i--) {
     const token = queryTokens[i];
@@ -167,15 +163,36 @@ function firstKeywordFromEnd(
       level++;
     } else if (token.type === "lparen") {
       level--;
-    } else if (
-      token.type === "keyword" &&
-      level === targetParenLevel &&
-      !excludedKeywordValues.includes(token.value)
-    ) {
+    } else if (level === targetParenLevel) {
+      return i;
+    }
+  }
+  // This should never happen.
+  // And if it did this lib doesn't know what to do
+  throw new Error("Unexpected index");
+}
+
+function findPrev(queryTokens, startingIndex, predicate) {
+  let level = 0;
+  for (let i = startingIndex; i >= 0; i--) {
+    const token = queryTokens[i];
+    if (token.type === "rparen") {
+      level++;
+    } else if (token.type === "lparen") {
+      level--;
+    } else if (level === 0 && predicate(token)) {
       return { ...token, index: i };
     }
   }
   return null;
+}
+
+function firstKeywordFromEnd(queryTokens, startingIndex) {
+  return findPrev(
+    queryTokens,
+    startingIndex,
+    (token) => token.type === "keyword"
+  );
 }
 
 function findLimitInsertionIndex(queryTokens, targetParenLevel) {
@@ -196,7 +213,9 @@ function findLimitInsertionIndex(queryTokens, targetParenLevel) {
       return i + 1;
     }
   }
-  return -1;
+  // This should never happen.
+  // And if it did this lib doesn't know what to do
+  throw new Error("Unexpected index");
 }
 
 function enforceLimit(queryTokens, limit) {
@@ -232,30 +251,35 @@ function enforceLimit(queryTokens, limit) {
     return queryTokens;
   }
 
-  // Limits go at the end, so we are going to rewind from end and find first keyword
-  // if that first keyword is `limit`, we'll enforce the limit
-  // if that keyword is not limit, we need to add limit
+  // Limit was not found, so figure out where it should be inserted
+  // Limits go at the end, so rewind from end and find first keyword
+  // If last keyword is offset, need to put limit before that
+  // If not offset, put limit at end, before terminator if present
 
-  // limit is not there so inject it
-  const injectedTokens = [
-    createToken.keyword("limit"),
-    createToken.singleSpace(),
-    createToken.number(limit),
-  ];
-
-  // if last keyword is offset, need to put limit before that
-  // TODO - there are lots of other keywords that could be in end. This approach does not work
-  const lastKeyword = firstKeywordFromEnd(queryTokens, targetParenLevel);
-  if (lastKeyword.value === "offset") {
-    const firstHalf = queryTokens.slice(0, lastKeyword.index);
-    const secondhalf = queryTokens.slice(lastKeyword.index);
+  const offsetToken = findToken(
+    queryTokens,
+    statementkeywordIndex,
+    (token) => token.type === "keyword" && token.value === "offset"
+  );
+  if (offsetToken) {
+    const firstHalf = queryTokens.slice(0, offsetToken.index);
+    const secondhalf = queryTokens.slice(offsetToken.index);
     return [
       ...firstHalf,
-      ...injectedTokens,
+      createToken.keyword("limit"),
+      createToken.singleSpace(),
+      createToken.number(limit),
       createToken.singleSpace(),
       ...secondhalf,
     ];
   }
+
+  // TODO - there are lots of other keywords that could be in end. This approach does not work
+  // const parenLevelEndIndex = findParenLevelEndIndex(
+  //   queryTokens,
+  //   targetParenLevel
+  // );
+  // const lastKeyword = firstKeywordFromEnd(queryTokens, parenLevelEndIndex);
 
   // Otherwise append to end,
   // skipping past any trailing comments, whitespace, terminator
@@ -265,7 +289,9 @@ function enforceLimit(queryTokens, limit) {
   return [
     ...firstHalf,
     createToken.singleSpace(),
-    ...injectedTokens,
+    createToken.keyword("limit"),
+    createToken.singleSpace(),
+    createToken.number(limit),
     ...secondhalf,
   ];
 }
