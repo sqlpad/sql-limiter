@@ -1,28 +1,5 @@
 const tokenize = require("./tokenize");
-
-function singleSpaceToken() {
-  return {
-    type: "whitespace",
-    text: " ",
-    value: " ",
-  };
-}
-
-function keywordToken(text) {
-  return {
-    type: "keyword",
-    text,
-    value: text.toLowerCase(),
-  };
-}
-
-function numberToken(n) {
-  return {
-    type: "number",
-    text: `${n}`,
-    value: n,
-  };
-}
+const createToken = require("./create-token");
 
 /**
  * Splits sql text into an array of arrays of tokens
@@ -148,11 +125,11 @@ function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
   if (nextKeywordToken.value !== limitKeyword.toLowerCase()) {
     // not there so inject it
     const injectedTokens = [
-      singleSpaceToken(),
-      keywordToken(limitKeyword),
-      singleSpaceToken(),
-      numberToken(limit),
-      singleSpaceToken(),
+      createToken.singleSpace(),
+      createToken.keyword(limitKeyword),
+      createToken.singleSpace(),
+      createToken.number(limit),
+      createToken.singleSpace(),
     ];
     const firstHalf = queryTokens.slice(0, statementkeywordIndex + 1);
     const secondhalf = queryTokens.slice(statementkeywordIndex + 1);
@@ -249,9 +226,9 @@ function enforceLimit(queryTokens, limit) {
   if (keywordFromEnd.value !== "limit") {
     // limit is not there so inject it
     const injectedTokens = [
-      keywordToken("limit"),
-      singleSpaceToken(),
-      numberToken(limit),
+      createToken.keyword("limit"),
+      createToken.singleSpace(),
+      createToken.number(limit),
     ];
 
     // if last keyword is offset, need to put limit before that
@@ -262,7 +239,7 @@ function enforceLimit(queryTokens, limit) {
       return [
         ...firstHalf,
         ...injectedTokens,
-        singleSpaceToken(),
+        createToken.singleSpace(),
         ...secondhalf,
       ];
     }
@@ -275,7 +252,7 @@ function enforceLimit(queryTokens, limit) {
       const secondhalf = queryTokens.slice(targetIndex);
       return [
         ...firstHalf,
-        singleSpaceToken(),
+        createToken.singleSpace(),
         ...injectedTokens,
         ...secondhalf,
       ];
