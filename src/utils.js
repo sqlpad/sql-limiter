@@ -245,7 +245,6 @@ function enforceLimit(queryTokens, limit) {
 
   // if last keyword is offset, need to put limit before that
   // TODO - there are lots of other keywords that could be in end. This approach does not work
-  // TODO - if offset if found, this doesn't solve trailing comment
   const lastKeyword = firstKeywordFromEnd(queryTokens, targetParenLevel);
   if (lastKeyword.value === "offset") {
     const firstHalf = queryTokens.slice(0, lastKeyword.index);
