@@ -255,15 +255,16 @@ function enforceLimit(queryTokens, limit) {
   // Limits go at the end, so rewind from end and find first keyword
   // If last keyword is offset, need to put limit before that
   // If not offset, put limit at end, before terminator if present
-
-  const offsetToken = findToken(
+  const insertBeforeToken = findToken(
     queryTokens,
     statementkeywordIndex,
-    (token) => token.type === "keyword" && token.value === "offset"
+    (token) =>
+      token.type === "keyword" &&
+      (token.value === "offset" || token.value === "for")
   );
-  if (offsetToken) {
-    const firstHalf = queryTokens.slice(0, offsetToken.index);
-    const secondhalf = queryTokens.slice(offsetToken.index);
+  if (insertBeforeToken) {
+    const firstHalf = queryTokens.slice(0, insertBeforeToken.index);
+    const secondhalf = queryTokens.slice(insertBeforeToken.index);
     return [
       ...firstHalf,
       createToken.keyword("limit"),

@@ -56,31 +56,38 @@ describe("enforceLimit", function () {
     );
   });
 
-  it("Handles trailing line before offset", function () {
+  it("handles trailing line before offset", function () {
     test(
       `SELECT * FROM something -- comment\nOFFSET 10`,
       `SELECT * FROM something -- comment\nlimit 1000 OFFSET 10`
     );
   });
 
-  it("Handles multiline before offset", function () {
+  it("handles multiline before offset", function () {
     test(
       `SELECT * FROM something -- comment\n/* comment */ OFFSET 10`,
       `SELECT * FROM something -- comment\n/* comment */ limit 1000 OFFSET 10`
     );
   });
 
-  it("Handles offset with ROWS", function () {
+  it("handles offset with ROWS", function () {
     test(
       `SELECT * FROM something OFFSET 10 ROWS ;`,
       `SELECT * FROM something limit 1000 OFFSET 10 ROWS ;`
     );
   });
 
-  it("Handles offset with ROW", function () {
+  it("handles offset with ROW", function () {
     test(
       `SELECT * FROM something OFFSET 10 ROW ;`,
       `SELECT * FROM something limit 1000 OFFSET 10 ROW ;`
+    );
+  });
+
+  it("handles FOR", function () {
+    test(
+      `SELECT * FROM something FOR UPDATE ;`,
+      `SELECT * FROM something limit 1000 FOR UPDATE ;`
     );
   });
 
