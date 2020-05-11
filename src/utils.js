@@ -84,7 +84,7 @@ function getStatementType(queryTokens = []) {
   };
 }
 
-function nextKeyword(tokens, startingIndex) {
+function findParenLevelToken(tokens, startingIndex, predicate) {
   let level = 0;
   for (let i = startingIndex; i < tokens.length; i++) {
     const token = tokens[i];
@@ -92,23 +92,67 @@ function nextKeyword(tokens, startingIndex) {
       level++;
     } else if (token.type === "rparen") {
       level--;
-    } else if (token.type === "keyword" && level === 0) {
+    } else if (level === 0 && predicate(token)) {
       return { ...token, index: i };
     }
   }
   return null;
 }
 
-function nextNonCommentNonWhitespace(tokens, startingIndex) {
-  const ignoreTypes = ["whitespace", "comment"];
+function findToken(tokens, startingIndex, predicate) {
   for (let i = startingIndex; i < tokens.length; i++) {
     const token = tokens[i];
-    const shouldIgnore = ignoreTypes.includes(token.type);
-    if (!shouldIgnore) {
+    if (predicate(token)) {
       return { ...token, index: i };
     }
   }
   return null;
+}
+
+function nextKeyword(tokens, startingIndex) {
+  return findParenLevelToken(
+    tokens,
+    startingIndex,
+    (token) => token.type === "keyword"
+  );
+}
+
+function nextNonCommentNonWhitespace(tokens, startingIndex) {
+  return findToken(
+    tokens,
+    startingIndex,
+    (token) => token.type !== "whitespace" && token.type !== "comment"
+  );
+}
+
+function hasLimit(tokens, startingIndex) {
+  const limitKeywordToken = findToken(
+    tokens,
+    startingIndex,
+    (token) => token.type === "keyword" && token.value === "limit"
+  );
+
+  if (!limitKeywordToken) {
+    return null;
+  }
+
+  const nextNonWC = nextNonCommentNonWhitespace(
+    tokens,
+    limitKeywordToken.index + 1
+  );
+
+  if (!nextNonWC) {
+    throw new Error("Unexpected end of statement");
+  }
+
+  if (nextNonWC.type !== "number") {
+    throw new Error(`Expected number got ${nextNonWC.type}`);
+  }
+
+  return {
+    limitKeywordToken,
+    limitNumberToken: nextNonWC,
+  };
 }
 
 function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
@@ -210,83 +254,75 @@ function findLimitInsertionIndex(queryTokens, targetParenLevel) {
 }
 
 function enforceLimit(queryTokens, limit) {
-  const { statementKeyword, targetParenLevel } = getStatementType(queryTokens);
+  const {
+    statementKeyword,
+    statementkeywordIndex,
+    targetParenLevel,
+  } = getStatementType(queryTokens);
 
   // If not dealing with a select return tokens unaltered
   if (statementKeyword !== "select") {
     return queryTokens;
   }
 
+  const limitResult = hasLimit(queryTokens, statementkeywordIndex);
+  if (limitResult) {
+    // limit is there, so find next number and validate
+    // is the next non-whitespace non-comment a number?
+    // If so, enforce that number be no larger than limit
+
+    const { limitNumberToken } = limitResult;
+
+    // If the number if over the limit, reset it
+    if (parseInt(limitNumberToken.value, 10) > limit) {
+      const firstHalf = queryTokens.slice(0, limitNumberToken.index);
+      const secondhalf = queryTokens.slice(limitNumberToken.index + 1);
+      return [
+        ...firstHalf,
+        { ...limitNumberToken, text: limit, value: limit },
+        ...secondhalf,
+      ];
+    }
+    return queryTokens;
+  }
+
   // Limits go at the end, so we are going to rewind from end and find first keyword
   // if that first keyword is `limit`, we'll enforce the limit
   // if that keyword is not limit, we need to add limit
-  const keywordFromEnd = firstKeywordFromEnd(queryTokens, targetParenLevel, [
-    "offset",
-  ]);
-  if (keywordFromEnd.value !== "limit") {
-    // limit is not there so inject it
-    const injectedTokens = [
-      createToken.keyword("limit"),
-      createToken.singleSpace(),
-      createToken.number(limit),
-    ];
 
-    // if last keyword is offset, need to put limit before that
-    const lastKeyword = firstKeywordFromEnd(queryTokens, targetParenLevel);
-    if (lastKeyword.value === "offset") {
-      const firstHalf = queryTokens.slice(0, lastKeyword.index);
-      const secondhalf = queryTokens.slice(lastKeyword.index);
-      return [
-        ...firstHalf,
-        ...injectedTokens,
-        createToken.singleSpace(),
-        ...secondhalf,
-      ];
-    }
+  // limit is not there so inject it
+  const injectedTokens = [
+    createToken.keyword("limit"),
+    createToken.singleSpace(),
+    createToken.number(limit),
+  ];
 
-    // Otherwise append to end,
-    // skipping past any trailing comments, whitespace, terminator
-    const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
-    if (targetIndex > -1) {
-      const firstHalf = queryTokens.slice(0, targetIndex);
-      const secondhalf = queryTokens.slice(targetIndex);
-      return [
-        ...firstHalf,
-        createToken.singleSpace(),
-        ...injectedTokens,
-        ...secondhalf,
-      ];
-    }
-  }
-
-  // limit is there, so find next number and validate
-  // is the next non-whitespace non-comment a number?
-  // If so, enforce that number be no larger than limit
-  const next = nextNonCommentNonWhitespace(
-    queryTokens,
-    keywordFromEnd.index + 1
-  );
-
-  // If not found for some reason, or type is not a number, this doesnt know what to do
-  // throw an error.
-  if (!next) {
-    throw new Error("Unexpected end of statement");
-  }
-  if (next.type !== "number") {
-    throw new Error(`Expected number got ${next.type}`);
-  }
-
-  // If the number if over the limit, reset it
-  if (parseInt(next.value, 10) > limit) {
-    const firstHalf = queryTokens.slice(0, next.index);
-    const secondhalf = queryTokens.slice(next.index + 1);
+  // if last keyword is offset, need to put limit before that
+  // TODO - there are lots of other keywords that could be in end. This approach does not work
+  // TODO - if offset if found, this doesn't solve trailing comment
+  const lastKeyword = firstKeywordFromEnd(queryTokens, targetParenLevel);
+  if (lastKeyword.value === "offset") {
+    const firstHalf = queryTokens.slice(0, lastKeyword.index);
+    const secondhalf = queryTokens.slice(lastKeyword.index);
     return [
       ...firstHalf,
-      { ...next, text: limit, value: limit },
+      ...injectedTokens,
+      createToken.singleSpace(),
       ...secondhalf,
     ];
   }
-  return queryTokens;
+
+  // Otherwise append to end,
+  // skipping past any trailing comments, whitespace, terminator
+  const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
+  const firstHalf = queryTokens.slice(0, targetIndex);
+  const secondhalf = queryTokens.slice(targetIndex);
+  return [
+    ...firstHalf,
+    createToken.singleSpace(),
+    ...injectedTokens,
+    ...secondhalf,
+  ];
 }
 
 /**
