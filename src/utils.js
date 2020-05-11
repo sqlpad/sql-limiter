@@ -246,12 +246,6 @@ function enforceLimit(queryTokens, limit) {
     ];
   }
 
-  // const parenLevelEndIndex = findParenLevelEndIndex(
-  //   queryTokens,
-  //   targetParenLevel
-  // );
-  // const lastKeyword = firstKeywordFromEnd(queryTokens, parenLevelEndIndex);
-
   // No terminator. Append to end
   // skipping past any trailing comments, whitespace, terminator
   const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
