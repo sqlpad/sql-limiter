@@ -1,39 +1,45 @@
 const assert = require("assert");
 const utils = require("../src/utils");
 
-function enforceFirst(sqlText) {
+function enforceFirst(sqlText, expected) {
   const queriesTokens = utils.getQueriesTokens(sqlText);
   const queryTokens = utils.enforceLimit(queriesTokens[0], 1000);
-  return queryTokens.map((t) => t.text).join("");
+  const enforcedSql = queryTokens.map((t) => t.text).join("");
+  assert.equal(enforcedSql, expected);
 }
 
 describe("enforceLimit", function () {
   it("basic limit not existing", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something`);
-    assert.equal(enforcedSql, "SELECT * FROM something limit 1000");
+    enforceFirst(
+      `SELECT * FROM something`,
+      "SELECT * FROM something limit 1000"
+    );
   });
 
   it("basic limit not existing with semi", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something;`);
-    assert.equal(enforcedSql, "SELECT * FROM something limit 1000;");
+    enforceFirst(
+      `SELECT * FROM something;`,
+      "SELECT * FROM something limit 1000;"
+    );
   });
 
   it("basic limit existing, under", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something LIMIT 10;`);
-    assert.equal(enforcedSql, "SELECT * FROM something LIMIT 10;");
+    enforceFirst(
+      `SELECT * FROM something LIMIT 10;`,
+      "SELECT * FROM something LIMIT 10;"
+    );
   });
 
   it("basic limit existing, over", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something LIMIT 9999;`);
-    assert.equal(enforcedSql, "SELECT * FROM something LIMIT 1000;");
+    enforceFirst(
+      `SELECT * FROM something LIMIT 9999;`,
+      "SELECT * FROM something LIMIT 1000;"
+    );
   });
 
   it("cte limit existing, over", function () {
-    const enforcedSql = enforceFirst(
-      `WITH cte AS (SELECT TOP 1 * FROM foo LIMIT 10) SELECT * FROM something LIMIT 9999 ;`
-    );
-    assert.equal(
-      enforcedSql,
+    enforceFirst(
+      `WITH cte AS (SELECT TOP 1 * FROM foo LIMIT 10) SELECT * FROM something LIMIT 9999 ;`,
       "WITH cte AS (SELECT TOP 1 * FROM foo LIMIT 10) SELECT * FROM something LIMIT 1000 ;"
     );
   });
@@ -43,24 +49,30 @@ describe("enforceLimit", function () {
   });
 
   it("handles offset", function () {
-    const enforcedSql = enforceFirst(
-      `SELECT * FROM something limit 9999 OFFSET 10`
+    enforceFirst(
+      `SELECT * FROM something limit 9999 OFFSET 10`,
+      `SELECT * FROM something limit 1000 OFFSET 10`
     );
-    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
   });
 
   it("handles trailing line comment", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something -- comment`);
-    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 -- comment`);
+    enforceFirst(
+      `SELECT * FROM something -- comment`,
+      `SELECT * FROM something limit 1000 -- comment`
+    );
   });
 
   it("handles offset no limit", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something OFFSET 10`);
-    assert.equal(enforcedSql, `SELECT * FROM something limit 1000 OFFSET 10`);
+    enforceFirst(
+      `SELECT * FROM something OFFSET 10`,
+      `SELECT * FROM something limit 1000 OFFSET 10`
+    );
   });
 
   it("ignores non-select", function () {
-    const enforcedSql = enforceFirst(`INSERT INTO foo SELECT * FROM something`);
-    assert.equal(enforcedSql, `INSERT INTO foo SELECT * FROM something`);
+    enforceFirst(
+      `INSERT INTO foo SELECT * FROM something`,
+      `INSERT INTO foo SELECT * FROM something`
+    );
   });
 });
