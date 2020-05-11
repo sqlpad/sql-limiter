@@ -109,14 +109,6 @@ function findToken(tokens, startingIndex, predicate) {
   return null;
 }
 
-function nextKeyword(tokens, startingIndex) {
-  return findParenLevelToken(
-    tokens,
-    startingIndex,
-    (token) => token.type === "keyword"
-  );
-}
-
 function nextNonCommentNonWhitespace(tokens, startingIndex) {
   return findToken(
     tokens,
@@ -153,46 +145,6 @@ function hasLimit(tokens, startingIndex) {
     limitKeywordToken,
     limitNumberToken: nextNonWC,
   };
-}
-
-function findParenLevelEndIndex(queryTokens, targetParenLevel) {
-  let level = 0;
-  for (let i = queryTokens.length - 1; i >= 0; i--) {
-    const token = queryTokens[i];
-    if (token.type === "rparen") {
-      level++;
-    } else if (token.type === "lparen") {
-      level--;
-    } else if (level === targetParenLevel) {
-      return i;
-    }
-  }
-  // This should never happen.
-  // And if it did this lib doesn't know what to do
-  throw new Error("Unexpected index");
-}
-
-function findPrev(queryTokens, startingIndex, predicate) {
-  let level = 0;
-  for (let i = startingIndex; i >= 0; i--) {
-    const token = queryTokens[i];
-    if (token.type === "rparen") {
-      level++;
-    } else if (token.type === "lparen") {
-      level--;
-    } else if (level === 0 && predicate(token)) {
-      return { ...token, index: i };
-    }
-  }
-  return null;
-}
-
-function firstKeywordFromEnd(queryTokens, startingIndex) {
-  return findPrev(
-    queryTokens,
-    startingIndex,
-    (token) => token.type === "keyword"
-  );
 }
 
 function findLimitInsertionIndex(queryTokens, targetParenLevel) {
