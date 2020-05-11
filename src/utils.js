@@ -155,60 +155,6 @@ function hasLimit(tokens, startingIndex) {
   };
 }
 
-function enforceTopOrFirst(queryTokens, limitKeyword = "", limit) {
-  const { statementKeyword, statementkeywordIndex } = getStatementType(
-    queryTokens
-  );
-
-  // If not dealing with a select return tokens unaltered
-  if (statementKeyword !== "select") {
-    return queryTokens;
-  }
-
-  const nextKeywordToken = nextKeyword(queryTokens, statementkeywordIndex + 1);
-  if (nextKeywordToken.value !== limitKeyword.toLowerCase()) {
-    // not there so inject it
-    const injectedTokens = [
-      createToken.singleSpace(),
-      createToken.keyword(limitKeyword),
-      createToken.singleSpace(),
-      createToken.number(limit),
-      createToken.singleSpace(),
-    ];
-    const firstHalf = queryTokens.slice(0, statementkeywordIndex + 1);
-    const secondhalf = queryTokens.slice(statementkeywordIndex + 1);
-    return [...firstHalf, ...injectedTokens, ...secondhalf];
-  }
-
-  // is the next non-whitespace non-comment a number?
-  // If so, enforce that number be no larger than limit
-  const next = nextNonCommentNonWhitespace(
-    queryTokens,
-    nextKeywordToken.index + 1
-  );
-
-  // If not found for some reason, or type is not a number, this doesnt know what to do
-  // throw an error.
-  if (!next) {
-    throw new Error("Unexpected end of statement");
-  }
-  if (next.type !== "number") {
-    throw new Error(`Expected number got ${next.type}`);
-  }
-
-  // If the number if over the limit, reset it
-  if (parseInt(next.value, 10) > limit) {
-    const firstHalf = queryTokens.slice(0, next.index);
-    const secondhalf = queryTokens.slice(next.index + 1);
-    return [
-      ...firstHalf,
-      { ...next, text: limit, value: limit },
-      ...secondhalf,
-    ];
-  }
-  return queryTokens;
-}
-
 function firstKeywordFromEnd(
   queryTokens,
   targetParenLevel,
@@ -359,7 +305,6 @@ function getQueries(sqlText, includeTerminators = false) {
 
 module.exports = {
   enforceLimit,
-  enforceTopOrFirst,
   getQueries,
   getQueriesTokens,
   getStatementType,

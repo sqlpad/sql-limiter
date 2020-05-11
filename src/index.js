@@ -1,8 +1,4 @@
-const {
-  getQueriesTokens,
-  enforceTopOrFirst,
-  enforceLimit,
-} = require("./utils.js");
+const { getQueriesTokens, enforceLimit } = require("./utils.js");
 
 const VALID_LIMIT_KEYWORDS = ["limit", "first", "top"];
 
@@ -42,15 +38,7 @@ function limit(sqlText, limitKeyword, limitNumber) {
 
   queriesTokens.forEach((queryTokens) => {
     let enforcedTokens = [];
-    if (lowerKeyword === "top" || lowerKeyword === "first") {
-      enforcedTokens = enforceTopOrFirst(
-        queryTokens,
-        limitKeyword,
-        limitNumber
-      );
-    } else {
-      enforcedTokens = enforceLimit(queryTokens, limitNumber);
-    }
+    enforcedTokens = enforceLimit(queryTokens, limitNumber);
     enforcedSql += enforcedTokens.map((t) => t.text).join("");
   });
 
