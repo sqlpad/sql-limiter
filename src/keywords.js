@@ -233,6 +233,7 @@ module.exports = [
   "rollback",
   "rowcount",
   "rowguidcol",
+  "row",
   "rows",
   "rule",
   "save",
