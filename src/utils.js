@@ -199,18 +199,18 @@ function findLimitInsertionIndex(queryTokens, targetParenLevel) {
   let level = 0;
   for (let i = queryTokens.length - 1; i >= 0; i--) {
     const token = queryTokens[i];
+    if (
+      level === targetParenLevel &&
+      token.type !== "comment" &&
+      token.type !== "whitespace"
+    ) {
+      return i + 1;
+    }
 
     if (token.type === "rparen") {
       level++;
     } else if (token.type === "lparen") {
       level--;
-    } else if (
-      level === targetParenLevel &&
-      token.type !== "comment" &&
-      token.type !== "whitespace" &&
-      token.type !== "terminator"
-    ) {
-      return i + 1;
     }
   }
   // This should never happen.
@@ -255,7 +255,7 @@ function enforceLimit(queryTokens, limit) {
   // Limits go at the end, so rewind from end and find first keyword
   // If last keyword is offset, need to put limit before that
   // If not offset, put limit at end, before terminator if present
-  const insertBeforeToken = findToken(
+  const insertBeforeToken = findParenLevelToken(
     queryTokens,
     statementkeywordIndex,
     (token) =>
@@ -275,13 +275,32 @@ function enforceLimit(queryTokens, limit) {
     ];
   }
 
+  // If there is a terminator add it just before
+  const terminatorToken = findParenLevelToken(
+    queryTokens,
+    statementkeywordIndex,
+    (token) => token.type === "terminator"
+  );
+  if (terminatorToken) {
+    const firstHalf = queryTokens.slice(0, terminatorToken.index);
+    const secondhalf = queryTokens.slice(terminatorToken.index);
+    return [
+      ...firstHalf,
+      createToken.singleSpace(),
+      createToken.keyword("limit"),
+      createToken.singleSpace(),
+      createToken.number(limit),
+      ...secondhalf,
+    ];
+  }
+
   // const parenLevelEndIndex = findParenLevelEndIndex(
   //   queryTokens,
   //   targetParenLevel
   // );
   // const lastKeyword = firstKeywordFromEnd(queryTokens, parenLevelEndIndex);
 
-  // Otherwise append to end,
+  // No terminator. Append to end
   // skipping past any trailing comments, whitespace, terminator
   const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
   const firstHalf = queryTokens.slice(0, targetIndex);

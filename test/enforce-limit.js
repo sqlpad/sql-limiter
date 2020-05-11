@@ -84,6 +84,27 @@ describe("enforceLimit", function () {
     );
   });
 
+  it("handles offset in subquery", function () {
+    test(
+      `SELECT * FROM ( select something OFFSET 10 ROW ) ;`,
+      `SELECT * FROM ( select something OFFSET 10 ROW )  limit 1000;`
+    );
+  });
+
+  it("handles offset in subquery no ;", function () {
+    test(
+      `SELECT * FROM ( select something OFFSET 10 ROW )`,
+      `SELECT * FROM ( select something OFFSET 10 ROW ) limit 1000`
+    );
+  });
+
+  it("handles query wrapped in parens", function () {
+    test(
+      `(SELECT * FROM ( select something OFFSET 10 ROW ))`,
+      `(SELECT * FROM ( select something OFFSET 10 ROW ) limit 1000)`
+    );
+  });
+
   it("handles FOR", function () {
     test(
       `SELECT * FROM something FOR UPDATE ;`,
