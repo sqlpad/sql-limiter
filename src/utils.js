@@ -274,7 +274,6 @@ function enforceLimit(queryTokens, limit) {
     ];
   }
 
-  // TODO - there are lots of other keywords that could be in end. This approach does not work
   // const parenLevelEndIndex = findParenLevelEndIndex(
   //   queryTokens,
   //   targetParenLevel
