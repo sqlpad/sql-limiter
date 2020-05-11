@@ -13,8 +13,9 @@ describe("api: limit", function () {
   it("accepts upper/lower case keywords", function () {
     sqlLimiter.limit(`SELECT * from something`, "limit", 100);
     sqlLimiter.limit(`SELECT * from something`, "LIMIT", 100);
-    sqlLimiter.limit(`SELECT * from something`, "top", 100);
-    sqlLimiter.limit(`SELECT * from something`, "TOP", 100);
+    sqlLimiter.limit(`SELECT * from something`, "fetch", 100);
+    sqlLimiter.limit(`SELECT * from something`, "FETCH", 100);
+    sqlLimiter.limit(`SELECT * from something`, ["limit", "FETCH"], 100);
   });
 
   it("single limit not existing", function () {
@@ -43,6 +44,41 @@ describe("api: limit", function () {
       100
     );
     assert.equal(res, `SELECT * from something limit 100;`);
+  });
+
+  it("limit array", function () {
+    const res = sqlLimiter.limit(`SELECT * from something`, ["limit"], 100);
+    assert.equal(res, `SELECT * from something limit 100`);
+  });
+
+  it("limit & fetch, limit preference", function () {
+    const res = sqlLimiter.limit(
+      `SELECT * from something`,
+      ["limit", "fetch"],
+      100
+    );
+    assert.equal(res, `SELECT * from something limit 100`);
+  });
+
+  it("fetch & limit, fetch preference", function () {
+    const res = sqlLimiter.limit(
+      `SELECT * from something`,
+      ["fetch", "limit"],
+      100
+    );
+    assert.equal(res, `SELECT * from something fetch first 100 rows only`);
+  });
+
+  it("Adds fetch if limit exists and isn't specified as strategy", function () {
+    const res = sqlLimiter.limit(
+      `SELECT * from something limit 100`,
+      ["fetch"],
+      100
+    );
+    assert.equal(
+      res,
+      `SELECT * from something limit 100 fetch first 100 rows only`
+    );
   });
 
   it("multi limit mixed", function () {
