@@ -1,9 +1,10 @@
 const assert = require("assert");
-const utils = require("../src/utils");
+const enforceLimit = require("../src/enforce-limit");
+const getQueriesTokens = require("../src/get-queries-tokens");
 
 function test(sqlText, expected) {
-  const queriesTokens = utils.getQueriesTokens(sqlText);
-  const queryTokens = utils.enforceLimit(queriesTokens[0], 1000);
+  const queriesTokens = getQueriesTokens(sqlText);
+  const queryTokens = enforceLimit(queriesTokens[0], 1000);
   const enforcedSql = queryTokens.map((t) => t.text).join("");
   assert.equal(enforcedSql, expected);
 }

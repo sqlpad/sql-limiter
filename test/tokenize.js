@@ -1,8 +1,8 @@
 const assert = require("assert");
-const utils = require("../src/utils");
+const tokenize = require("../src/tokenize");
 
 function hasTokens(str, type, value, count) {
-  const tokens = utils.tokenize(str);
+  const tokens = tokenize(str);
   const actualCount = tokens.filter((t) => t.value === value && t.type === type)
     .length;
 
@@ -94,5 +94,47 @@ describe("tokenize", function () {
     // Mixed
     hasTokens(`select ; \\g ;`, "terminator", ";", 2);
     hasTokens(`select ; \\g ;`, "terminator", "\\g", 1);
+  });
+
+  it("tokenizes random", function () {
+    const query = `
+      , ,,
+      < <<
+      > >>
+      . ..
+      / //
+      ? ??
+      : ::
+      ; ;;
+      \\ \\\\
+      | ||
+      } }}
+      ] ]] [ [[
+      { {{
+      \` \`\`
+      ~ ~~
+      ! !!
+      @ @@
+      # ##
+      $ $$
+      % %%
+      ^ ^^ & && * ** ( (( ) )) _ __ - -- = == + ++
+      WITH cte_a (a, b) AS (
+        select *
+        -- ;;;
+        FROM table_a."table_b".[table c]."table d"
+        WHERE something LIKE '%_sss%' AND other = ' '' '
+      )
+      SELECT a::TEXT AS "col a"
+      FROM "cte_a"
+      where a = 'something' 
+      /* comment */
+      /*
+      comment; /*
+      */
+        */
+    `;
+    const tokens = tokenize(query);
+    assert(tokens);
   });
 });

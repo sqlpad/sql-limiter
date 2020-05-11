@@ -1,4 +1,5 @@
-const { getQueriesTokens, enforceLimit } = require("./utils.js");
+const getQueriesTokens = require("./get-queries-tokens");
+const enforceLimit = require("./enforce-limit.js");
 
 const VALID_LIMIT_KEYWORDS = ["limit", "first", "top"];
 
