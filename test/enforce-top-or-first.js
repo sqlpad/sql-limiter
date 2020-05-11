@@ -13,11 +13,6 @@ describe("enforceTopOrFirst", function () {
     assert.equal(enforcedSql, "SELECT top 1000  * FROM something");
   });
 
-  it("basic first not existing", function () {
-    const enforcedSql = enforceFirst(`SELECT * FROM something`, "first");
-    assert.equal(enforcedSql, "SELECT first 1000  * FROM something");
-  });
-
   it("basic top existing, under", function () {
     const enforcedSql = enforceFirst(`SELECT top 10 * FROM something`, "top");
     assert.equal(enforcedSql, "SELECT top 10 * FROM something");

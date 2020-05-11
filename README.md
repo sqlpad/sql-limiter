@@ -9,7 +9,7 @@ const sqlLimiter = require("sql-limiter");
 
 const enforcedSql = sqlLimiter.limit(
   `SELECT * FROM something limit 999;`,
-  "limit", // or `top` or `first` if non-ANSI
+  "limit", // or `top` for SQL Server
   100 // max allowed limit
 );
 console.log(enforcedSql); // SELECT * FROM something limit 100
@@ -24,7 +24,7 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 ### `sqlLimiter.limit( sqlText, limitKeyword, limitNumber )`
 
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
-- `limitKeyword` - Keyword used to restrict rows. Must be either `limit`, `top`, or `first` (which works like `top`).
+- `limitKeyword` - Keyword used to restrict rows. Must be either `limit` or `top`.
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
 
 Returns `sqlText` with limits enforced.

@@ -7,14 +7,14 @@ const {
 const VALID_LIMIT_KEYWORDS = ["limit", "first", "top"];
 
 /**
- * Enforce limit/top/first on SQL SELECT queries.
+ * Enforce limit/top on SQL SELECT queries.
  * Non SELECT queries will not be altered.
  * If existing limit exists, it will be lowered if it is larger than `limitNumber` specified
  * If limit does not exist, it will be added.
  * Returns SQL text with limits enforced.
  *
  * @param {string} sqlText - sql text to limit
- * @param {string} limitKeyword -- must be one of `limit`, `first`, `top`
+ * @param {string} limitKeyword -- must be one of `limit`, `top`
  * @param {number} limitNumber -- number to enforce for limit keyword
  * @returns {string}
  */

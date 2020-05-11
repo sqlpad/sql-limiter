@@ -15,8 +15,6 @@ describe("api: limit", function () {
     sqlLimiter.limit(`SELECT * from something`, "LIMIT", 100);
     sqlLimiter.limit(`SELECT * from something`, "top", 100);
     sqlLimiter.limit(`SELECT * from something`, "TOP", 100);
-    sqlLimiter.limit(`SELECT * from something`, "first", 100);
-    sqlLimiter.limit(`SELECT * from something`, "FIRST", 100);
   });
 
   it("single limit not existing", function () {

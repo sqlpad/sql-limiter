@@ -144,7 +144,7 @@ function getStatementType(queryTokens = []) {
     } else if (token.type === "keyword") {
       // If targetParenLevel has not yet been set,
       // we are dealing with the first keyword, which informs us of the "level"
-      // we want to consider for finding SELECT and TOP/FIRST/LIMIT
+      // we want to consider for finding SELECT and TOP/LIMIT
       if (targetParenLevel === undefined) {
         targetParenLevel = parenLevel;
       }

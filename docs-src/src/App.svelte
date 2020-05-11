@@ -81,7 +81,6 @@
       <select id="limit-keyword" class="input" bind:value={limitKeyword}>
         <option value="limit">limit</option>
         <option value="top">top</option>
-        <option value="first">first</option>
       </select>
     </div>
     <div class="m8">
