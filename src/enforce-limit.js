@@ -64,6 +64,67 @@ function hasLimit(tokens, startingIndex) {
   };
 }
 
+/**
+ * Determines whether query tokens have "FETCH" style limits
+ * Postgres, IBM, Actian/Ingres, SQL Server 2012 support this SQL 2008 addition
+ *
+ * The postgres docs showcase the format nicely:
+ * [ FETCH { FIRST | NEXT } [ count ] { ROW | ROWS } ONLY ]
+ * [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT | SKIP LOCKED ] [...] ]
+ *
+ * For the purposes of sql-limiter, we will look for "fetch first <number>" and "fetch next <number>"
+ * Assuming that whitespace or comments can be between
+ *
+ * Resources:
+ * https://www.postgresql.org/docs/12/sql-select.html
+ * https://docs.actian.com/ingres/10s/index.html#page/SQLRef%2FSELECT_Clause.htm%23
+ * https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/sqlref/src/tpc/db2z_sql_fetchfirstclause.html
+ * https://use-the-index-luke.com/sql/partial-results/top-n-queries
+ *
+ * @param {array<object>} tokens
+ * @param {number} startingIndex
+ */
+function hasFetch(tokens, startingIndex) {
+  const fetchKeywordToken = findParenLevelToken(
+    tokens,
+    startingIndex,
+    (token) => token.type === "keyword" && token.value === "fetch"
+  );
+
+  if (!fetchKeywordToken) {
+    return null;
+  }
+
+  let nextNonWC = nextNonCommentNonWhitespace(
+    tokens,
+    fetchKeywordToken.index + 1
+  );
+
+  if (!nextNonWC) {
+    throw new Error("Unexpected end of statement");
+  }
+
+  if (
+    nextNonWC.type !== "keyword" ||
+    (nextNonWC.value !== "next" && nextNonWC.value !== "first")
+  ) {
+    throw new Error(`Unexpected token: ${nextNonWC.type} ${nextNonWC.value}`);
+  }
+
+  nextNonWC = nextNonCommentNonWhitespace(tokens, nextNonWC.index + 1);
+  if (!nextNonWC) {
+    throw new Error("Unexpected end of statement");
+  }
+  if (nextNonWC.type !== "number") {
+    throw new Error(`Expected number got ${nextNonWC.type}`);
+  }
+
+  return {
+    fetchKeywordToken,
+    fetchNumberToken: nextNonWC,
+  };
+}
+
 function findLimitInsertionIndex(queryTokens, targetParenLevel) {
   let level = 0;
   for (let i = queryTokens.length - 1; i >= 0; i--) {
@@ -87,41 +148,15 @@ function findLimitInsertionIndex(queryTokens, targetParenLevel) {
   throw new Error("Unexpected index");
 }
 
-function enforceLimit(queryTokens, limit) {
-  const {
-    statementKeyword,
-    statementkeywordIndex,
-    targetParenLevel,
-  } = getStatementType(queryTokens);
-
-  // If not dealing with a select return tokens unaltered
-  if (statementKeyword !== "select") {
-    return queryTokens;
-  }
-
-  const limitResult = hasLimit(queryTokens, statementkeywordIndex);
-  if (limitResult) {
-    // limit is there, so find next number and validate
-    // is the next non-whitespace non-comment a number?
-    // If so, enforce that number be no larger than limit
-
-    const { limitNumberToken } = limitResult;
-
-    // If the number if over the limit, reset it
-    if (parseInt(limitNumberToken.value, 10) > limit) {
-      const firstHalf = queryTokens.slice(0, limitNumberToken.index);
-      const secondhalf = queryTokens.slice(limitNumberToken.index + 1);
-      return [
-        ...firstHalf,
-        { ...limitNumberToken, text: limit, value: limit },
-        ...secondhalf,
-      ];
-    }
-    return queryTokens;
-  }
-
+/**
+ * Adds limit to query that does not have it
+ * @param {*} queryTokens
+ * @param {*} statementkeywordIndex
+ * @param {*} targetParenLevel
+ * @param {*} limit
+ */
+function addLimit(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
   // Limit was not found, so figure out where it should be inserted
-  // Limits go at the end, so rewind from end and find first keyword
   // If last keyword is offset, need to put limit before that
   // If not offset, put limit at end, before terminator if present
   const insertBeforeToken = findParenLevelToken(
@@ -176,6 +211,166 @@ function enforceLimit(queryTokens, limit) {
     createToken.number(limit),
     ...secondhalf,
   ];
+}
+
+/**
+ * Adds limit to query that does not have it
+ * @param {*} queryTokens
+ * @param {*} statementkeywordIndex
+ * @param {*} targetParenLevel
+ * @param {*} limit
+ */
+function addFetch(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
+  // fetch first was not found, so figure out where it should be inserted
+  // fetch first goes at end before for if that exists. Otherwise before terminator if it exists
+  const insertBeforeToken = findParenLevelToken(
+    queryTokens,
+    statementkeywordIndex,
+    (token) => token.type === "keyword" && token.value === "for"
+  );
+
+  const fetchToOnlyTokens = [
+    createToken.keyword("fetch"),
+    createToken.singleSpace(),
+    createToken.keyword("first"),
+    createToken.singleSpace(),
+    createToken.number(limit),
+    createToken.singleSpace(),
+    createToken.keyword("rows"),
+    createToken.singleSpace(),
+    createToken.keyword("only"),
+  ];
+
+  if (insertBeforeToken) {
+    const firstHalf = queryTokens.slice(0, insertBeforeToken.index);
+    const secondhalf = queryTokens.slice(insertBeforeToken.index);
+    return [
+      ...firstHalf,
+      ...fetchToOnlyTokens,
+      createToken.singleSpace(),
+      ...secondhalf,
+    ];
+  }
+
+  // If there is a terminator add it just before
+  const terminatorToken = findParenLevelToken(
+    queryTokens,
+    statementkeywordIndex,
+    (token) => token.type === "terminator"
+  );
+  if (terminatorToken) {
+    const firstHalf = queryTokens.slice(0, terminatorToken.index);
+    const secondhalf = queryTokens.slice(terminatorToken.index);
+    return [
+      ...firstHalf,
+      createToken.singleSpace(),
+      ...fetchToOnlyTokens,
+      ...secondhalf,
+    ];
+  }
+
+  // No terminator. Append to end
+  // skipping past any trailing comments, whitespace, terminator
+  const targetIndex = findLimitInsertionIndex(queryTokens, targetParenLevel);
+  const firstHalf = queryTokens.slice(0, targetIndex);
+  const secondhalf = queryTokens.slice(targetIndex);
+  return [
+    ...firstHalf,
+    createToken.singleSpace(),
+    ...fetchToOnlyTokens,
+    ...secondhalf,
+  ];
+}
+
+/**
+ * Detects, enforces or injects a limit using strategies specified.
+ * @param {Array<Object>} queryTokens
+ * @param {Array<String>|String} limitStrategies
+ * @param {Number} limit
+ */
+function enforceLimit(queryTokens, limitStrategies, limit) {
+  const strategies =
+    typeof limitStrategies === "string" ? [limitStrategies] : limitStrategies;
+
+  if (!Array.isArray(strategies)) {
+    throw new Error("limit strategies must be array or string");
+  }
+
+  const {
+    statementKeyword,
+    statementkeywordIndex,
+    targetParenLevel,
+  } = getStatementType(queryTokens);
+
+  // If not dealing with a select return tokens unaltered
+  if (statementKeyword !== "select") {
+    return queryTokens;
+  }
+
+  if (strategies.includes("limit")) {
+    const limitResult = hasLimit(queryTokens, statementkeywordIndex);
+    if (limitResult) {
+      // limit is there, so find next number and validate
+      // is the next non-whitespace non-comment a number?
+      // If so, enforce that number be no larger than limit
+      const { limitNumberToken } = limitResult;
+
+      // If the number if over the limit, reset it
+      if (parseInt(limitNumberToken.value, 10) > limit) {
+        const firstHalf = queryTokens.slice(0, limitNumberToken.index);
+        const secondhalf = queryTokens.slice(limitNumberToken.index + 1);
+        return [
+          ...firstHalf,
+          { ...limitNumberToken, text: limit, value: limit },
+          ...secondhalf,
+        ];
+      }
+      return queryTokens;
+    }
+  }
+
+  if (strategies.includes("fetch")) {
+    const fetchResult = hasFetch(queryTokens, statementkeywordIndex);
+    if (fetchResult) {
+      // limit is there, so find next number and validate
+      // is the next non-whitespace non-comment a number?
+      // If so, enforce that number be no larger than limit
+      const { fetchNumberToken } = fetchResult;
+
+      // If the number if over the limit, reset it
+      if (parseInt(fetchNumberToken.value, 10) > limit) {
+        const firstHalf = queryTokens.slice(0, fetchNumberToken.index);
+        const secondhalf = queryTokens.slice(fetchNumberToken.index + 1);
+        return [
+          ...firstHalf,
+          { ...fetchNumberToken, text: limit, value: limit },
+          ...secondhalf,
+        ];
+      }
+      return queryTokens;
+    }
+  }
+
+  const preferredStrategy = strategies[0];
+
+  if (preferredStrategy === "limit") {
+    return addLimit(
+      queryTokens,
+      statementkeywordIndex,
+      targetParenLevel,
+      limit
+    );
+  }
+  if (preferredStrategy === "fetch") {
+    return addFetch(
+      queryTokens,
+      statementkeywordIndex,
+      targetParenLevel,
+      limit
+    );
+  }
+
+  return [];
 }
 
 module.exports = enforceLimit;

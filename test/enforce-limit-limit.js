@@ -4,12 +4,12 @@ const getQueriesTokens = require("../src/get-queries-tokens");
 
 function test(sqlText, expected) {
   const queriesTokens = getQueriesTokens(sqlText);
-  const queryTokens = enforceLimit(queriesTokens[0], 1000);
+  const queryTokens = enforceLimit(queriesTokens[0], "limit", 1000);
   const enforcedSql = queryTokens.map((t) => t.text).join("");
   assert.equal(enforcedSql, expected);
 }
 
-describe("enforceLimit", function () {
+describe("enforceLimit: limit", function () {
   it("basic limit not existing", function () {
     test(`SELECT * FROM something`, "SELECT * FROM something limit 1000");
   });

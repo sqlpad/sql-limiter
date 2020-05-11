@@ -39,7 +39,7 @@ function limit(sqlText, limitKeyword, limitNumber) {
 
   queriesTokens.forEach((queryTokens) => {
     let enforcedTokens = [];
-    enforcedTokens = enforceLimit(queryTokens, limitNumber);
+    enforcedTokens = enforceLimit(queryTokens, lowerKeyword, limitNumber);
     enforcedSql += enforcedTokens.map((t) => t.text).join("");
   });
 
