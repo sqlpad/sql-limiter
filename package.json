@@ -1,7 +1,7 @@
 {
   "name": "sql-limiter",
   "version": "1.0.3",
-  "description": "Injects and enforces LIMIT in your SQL statements.",
+  "description": "Injects and enforces LIMIT / FETCH FIRST in your SQL statements.",
   "keywords": [
     "sql",
     "presto",
