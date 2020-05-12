@@ -3,7 +3,7 @@
   import Logo from "./Logo.svelte";
   import SqlDiff from "./SqlDiff.svelte";
 
-  let limitKeyword = "limit";
+  let limitKeywords = "limit-fetch";
   let limitNumber = 100;
   let original = `SELECT * FROM some_table;`;
 </script>
@@ -77,10 +77,12 @@
 
   <div class="row">
     <div class="m8">
-      <label for="limit-keyword">limit keyword</label>
-      <select id="limit-keyword" class="input" bind:value={limitKeyword}>
+      <label for="limit-keyword">limit strategy</label>
+      <select id="limit-keyword" class="input" bind:value={limitKeywords}>
         <option value="limit">limit</option>
-        <option value="top">top</option>
+        <option value="fetch">fetch</option>
+        <option value="fetch-limit">fetch, limit</option>
+        <option value="limit-fetch">limit, fetch</option>
       </select>
     </div>
     <div class="m8">
@@ -101,7 +103,7 @@
     <div class="col-50 m8">
       <label>result</label>
       <pre class="sql out">
-        <SqlDiff sql={original} {limitKeyword} {limitNumber} />
+        <SqlDiff sql={original} {limitKeywords} {limitNumber} />
       </pre>
     </div>
   </div>

@@ -4,7 +4,7 @@
   import Logo from "./Logo.svelte";
 
   export let sql = "";
-  export let limitKeyword = "";
+  export let limitKeywords = "";
   export let limitNumber = 100;
 
   let diff = new Diff();
@@ -12,10 +12,18 @@
   let textDiff;
   let prettyHtml;
   let error;
+  let limitStrategies;
 
   $: try {
     error = null;
-    limited = sqlLimiter.limit(sql, limitKeyword, limitNumber);
+    if (limitKeywords === "limit" || limitKeywords === "fetch") {
+      limitStrategies = [limitKeywords];
+    } else if (limitKeywords === "limit-fetch") {
+      limitStrategies = ["limit", "fetch"];
+    } else if (limitKeywords === "fetch-limit") {
+      limitStrategies = ["fetch", "limit"];
+    }
+    limited = sqlLimiter.limit(sql, limitStrategies, limitNumber);
     textDiff = diff.main(sql, limited);
     prettyHtml = diff.prettyHtml(textDiff);
   } catch (e) {
