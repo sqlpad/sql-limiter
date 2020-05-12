@@ -1,8 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-## [2.0.0] - Unreleased
+## [2.0.0] - 2020-05-11
 
 - Added support for `FETCH FIRST/NEXT`, and `LIMIT` at same time
 - Enhanced limit detections
