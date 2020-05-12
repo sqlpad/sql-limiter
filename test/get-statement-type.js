@@ -1,9 +1,10 @@
 const assert = require("assert");
-const utils = require("../src/utils");
+const getQueriesTokens = require("../src/get-queries-tokens");
+const getStatementType = require("../src/get-statement-type");
 
 function get(sql) {
-  const queriesTokens = utils.getQueriesTokens(sql);
-  return utils.getStatementType(queriesTokens[0]);
+  const queriesTokens = getQueriesTokens(sql);
+  return getStatementType(queriesTokens[0]);
 }
 
 describe("getStatementType", function () {

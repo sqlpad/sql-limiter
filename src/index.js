@@ -1,10 +1,7 @@
-const {
-  getQueriesTokens,
-  enforceTopOrFirst,
-  enforceLimit,
-} = require("./utils.js");
+const getQueriesTokens = require("./get-queries-tokens");
+const enforceLimit = require("./enforce-limit.js");
 
-const VALID_LIMIT_KEYWORDS = ["limit", "first", "top"];
+const VALID_STRATEGIES = ["limit", "fetch"];
 
 /**
  * Enforce limit/top on SQL SELECT queries.
@@ -14,27 +11,34 @@ const VALID_LIMIT_KEYWORDS = ["limit", "first", "top"];
  * Returns SQL text with limits enforced.
  *
  * @param {string} sqlText - sql text to limit
- * @param {string} limitKeyword -- must be one of `limit`, `top`
+ * @param {Array<String>|String} limitStrategies -- Values must be `limit` and/or `fetch`. First value takes priority if no limit exists
  * @param {number} limitNumber -- number to enforce for limit keyword
  * @returns {string}
  */
-function limit(sqlText, limitKeyword, limitNumber) {
+function limit(sqlText, limitStrategies, limitNumber) {
   if (typeof sqlText !== "string") {
     throw new Error("sqlText must be string");
-  }
-  if (typeof limitKeyword !== "string") {
-    throw new Error("limitKeyword must be string");
   }
   if (typeof limitNumber !== "number") {
     throw new Error("limitNumber must be number");
   }
 
-  const lowerKeyword = limitKeyword.toLowerCase();
-  if (!VALID_LIMIT_KEYWORDS.includes(lowerKeyword)) {
-    throw new Error(
-      `limitKeyword must be one of ${VALID_LIMIT_KEYWORDS.join(", ")}`
-    );
+  let strategies =
+    typeof limitStrategies === "string" ? [limitStrategies] : limitStrategies;
+
+  if (!Array.isArray(strategies)) {
+    throw new Error("limitStrategies must be an array or string");
   }
+
+  strategies = strategies.map((s) => s.toLowerCase());
+
+  strategies.forEach((strategy) => {
+    if (!VALID_STRATEGIES.includes(strategy)) {
+      throw new Error(
+        `limitStrategies must be one of ${VALID_STRATEGIES.join(", ")}`
+      );
+    }
+  });
 
   let enforcedSql = "";
 
@@ -42,15 +46,7 @@ function limit(sqlText, limitKeyword, limitNumber) {
 
   queriesTokens.forEach((queryTokens) => {
     let enforcedTokens = [];
-    if (lowerKeyword === "top" || lowerKeyword === "first") {
-      enforcedTokens = enforceTopOrFirst(
-        queryTokens,
-        limitKeyword,
-        limitNumber
-      );
-    } else {
-      enforcedTokens = enforceLimit(queryTokens, limitNumber);
-    }
+    enforcedTokens = enforceLimit(queryTokens, strategies, limitNumber);
     enforcedSql += enforcedTokens.map((t) => t.text).join("");
   });
 
