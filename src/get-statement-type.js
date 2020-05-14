@@ -10,11 +10,13 @@ function getStatementType(queryTokens = []) {
   let targetParenLevel;
   // statementKeyword will be `select`, `insert`, `alter`, etc.
   // keywords `with` and `as` not included to filter out cte
-  let statementKeyword = "";
-  let statementKeywordIndex;
+  let statementToken;
 
   for (let index = 0; index < queryTokens.length; index++) {
     const token = queryTokens[index];
+    token.parenLevel = parenLevel;
+    token.index = index;
+
     if (token.type === "lparen") {
       parenLevel++;
     } else if (token.type === "rparen") {
@@ -22,7 +24,7 @@ function getStatementType(queryTokens = []) {
     } else if (token.type === "keyword") {
       // If targetParenLevel has not yet been set,
       // we are dealing with the first keyword, which informs us of the "level"
-      // we want to consider for finding SELECT and TOP/LIMIT
+      // we want to consider for finding SELECT statments
       if (targetParenLevel === undefined) {
         targetParenLevel = parenLevel;
       }
@@ -36,26 +38,25 @@ function getStatementType(queryTokens = []) {
       // WITH cte AS (...) UPDATE ... FROM ...
       // (WITH cte AS (...) SELECT ...)
       if (
-        !statementKeyword &&
+        !statementToken &&
         targetParenLevel === parenLevel &&
         token.value !== "with" &&
         token.value !== "as"
       ) {
-        statementKeyword = token.value;
-        statementKeywordIndex = index;
+        statementToken = token;
+      }
 
-        // We've identified the statement keyword
-        // We can exit the loop
-        index = queryTokens.length;
+      // If we have the statement token identified
+      // And the query is a SELECT, and we're at the right paren level
+      // Check for other important keywords and take note of them
+      // LIMIT, FETCH, and FIRST need to be noted
+      if (statementToken && parenLevel === statementToken.parenLevel) {
+        // TODO
       }
     }
   }
 
-  return {
-    statementKeywordIndex,
-    statementKeyword,
-    targetParenLevel,
-  };
+  return statementToken;
 }
 
 module.exports = getStatementType;

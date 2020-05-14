@@ -10,16 +10,16 @@ function get(sql) {
 describe("getStatementType", function () {
   it("identifies basic select", function () {
     const res = get(`SELECT * FROM something`);
-    assert.equal(res.statementKeywordIndex, 0);
-    assert.equal(res.statementKeyword, "select");
-    assert.equal(res.targetParenLevel, 0);
+    assert.equal(res.index, 0);
+    assert.equal(res.value, "select");
+    assert.equal(res.parenLevel, 0);
   });
 
   it("identifies select in paren", function () {
     const res = get(`(select * from something)`);
-    assert.equal(res.statementKeywordIndex, 1);
-    assert.equal(res.statementKeyword, "select");
-    assert.equal(res.targetParenLevel, 1);
+    assert.equal(res.index, 1);
+    assert.equal(res.value, "select");
+    assert.equal(res.parenLevel, 1);
   });
 
   it("handles cte", function () {
@@ -33,8 +33,8 @@ describe("getStatementType", function () {
       insert into foo
       select * from bar;
     `);
-    assert.equal(res.statementKeywordIndex, 50);
-    assert.equal(res.statementKeyword, "insert");
-    assert.equal(res.targetParenLevel, 0);
+    assert.equal(res.index, 50);
+    assert.equal(res.value, "insert");
+    assert.equal(res.parenLevel, 0);
   });
 });

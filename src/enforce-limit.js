@@ -296,19 +296,15 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
     throw new Error("limit strategies must be array or string");
   }
 
-  const {
-    statementKeyword,
-    statementKeywordIndex,
-    targetParenLevel,
-  } = getStatementType(queryTokens);
+  const statementTypeToken = getStatementType(queryTokens);
 
   // If not dealing with a select return tokens unaltered
-  if (statementKeyword !== "select") {
+  if (statementTypeToken.value !== "select") {
     return queryTokens;
   }
 
   if (strategies.includes("limit")) {
-    const limitResult = hasLimit(queryTokens, statementKeywordIndex);
+    const limitResult = hasLimit(queryTokens, statementTypeToken.index);
     if (limitResult) {
       // limit is there, so find next number and validate
       // is the next non-whitespace non-comment a number?
@@ -330,7 +326,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   }
 
   if (strategies.includes("fetch")) {
-    const fetchResult = hasFetch(queryTokens, statementKeywordIndex);
+    const fetchResult = hasFetch(queryTokens, statementTypeToken.index);
     if (fetchResult) {
       // limit is there, so find next number and validate
       // is the next non-whitespace non-comment a number?
@@ -356,16 +352,16 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   if (preferredStrategy === "limit") {
     return addLimit(
       queryTokens,
-      statementKeywordIndex,
-      targetParenLevel,
+      statementTypeToken.index,
+      statementTypeToken.parenLevel,
       limit
     );
   }
   if (preferredStrategy === "fetch") {
     return addFetch(
       queryTokens,
-      statementKeywordIndex,
-      targetParenLevel,
+      statementTypeToken.index,
+      statementTypeToken.parenLevel,
       limit
     );
   }
