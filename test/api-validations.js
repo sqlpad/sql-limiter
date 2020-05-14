@@ -18,34 +18,6 @@ describe("api: limit", function () {
     sqlLimiter.limit(`SELECT * from something`, ["limit", "FETCH"], 100);
   });
 
-  it("single limit not existing", function () {
-    const res = sqlLimiter.limit(`SELECT * from something`, "limit", 100);
-    assert.equal(res, `SELECT * from something limit 100`);
-  });
-
-  it("single limit not existing w/;", function () {
-    const res = sqlLimiter.limit(`SELECT * from something;`, "limit", 100);
-    assert.equal(res, `SELECT * from something limit 100;`);
-  });
-
-  it("single limit existing under;", function () {
-    const res = sqlLimiter.limit(
-      `SELECT * from something limit 10;`,
-      "limit",
-      100
-    );
-    assert.equal(res, `SELECT * from something limit 10;`);
-  });
-
-  it("single limit existing over;", function () {
-    const res = sqlLimiter.limit(
-      `SELECT * from something limit 999;`,
-      "limit",
-      100
-    );
-    assert.equal(res, `SELECT * from something limit 100;`);
-  });
-
   it("limit array", function () {
     const res = sqlLimiter.limit(`SELECT * from something`, ["limit"], 100);
     assert.equal(res, `SELECT * from something limit 100`);
@@ -69,18 +41,6 @@ describe("api: limit", function () {
     assert.equal(res, `SELECT * from something fetch first 100 rows only`);
   });
 
-  it("Adds fetch if limit exists and isn't specified as strategy", function () {
-    const res = sqlLimiter.limit(
-      `SELECT * from something limit 100`,
-      ["fetch"],
-      100
-    );
-    assert.equal(
-      res,
-      `SELECT * from something limit 100 fetch first 100 rows only`
-    );
-  });
-
   it("multi limit mixed", function () {
     const original = `
       SELECT * from something limit 999;
@@ -102,38 +62,5 @@ describe("api: limit", function () {
 
     const res = sqlLimiter.limit(original, "limit", 100);
     assert.equal(res, expected);
-  });
-});
-
-describe("api: getStatements", function () {
-  it("throws errors for invalid args", function () {
-    assert.throws(() => sqlLimiter.getStatements());
-  });
-
-  it("gets statements", function () {
-    const statements = sqlLimiter.getStatements(
-      `SELECT * ; SELECT 2 --; SELECT 3`
-    );
-    assert.equal(statements.length, 2);
-    assert.equal(statements[0], "SELECT * ;");
-    assert.equal(statements[1], " SELECT 2 --; SELECT 3");
-  });
-});
-
-describe("api: removeTerminator", function () {
-  it("throws errors for invalid args", function () {
-    assert.throws(() => sqlLimiter.removeTerminator());
-  });
-
-  it("throws errors for multiple statements", function () {
-    assert.throws(() => sqlLimiter.removeTerminator(`SELECT * ; SELECT 2;`));
-  });
-
-  it("removes terminator", function () {
-    let res = sqlLimiter.removeTerminator(`SELECT * ;`);
-    assert.equal(res, "SELECT * ");
-
-    res = sqlLimiter.removeTerminator(`select ;     `);
-    assert.equal(res, "select ");
   });
 });
