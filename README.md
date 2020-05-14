@@ -40,12 +40,12 @@ const enforcedSql = sqlLimiter.limit(
   ["limit", "fetch"],
   100
 );
-console.log(enforcedSql); // SELECT * FROM some_table limit 100
+console.log(enforcedSql); // SELECT * FROM some_table limit 100;
 
 // When fetch is first
 const enforcedSql = sqlLimiter.limit(
   `SELECT * FROM some_table;`,
-  ["limit", "fetch"],
+  ["fetch", "limit"],
   100
 );
 console.log(enforcedSql); // SELECT * FROM some_table fetch first 100 rows only;
