@@ -151,17 +151,17 @@ function findLimitInsertionIndex(queryTokens, targetParenLevel) {
 /**
  * Adds limit to query that does not have it
  * @param {*} queryTokens
- * @param {*} statementkeywordIndex
+ * @param {*} statementKeywordIndex
  * @param {*} targetParenLevel
  * @param {*} limit
  */
-function addLimit(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
+function addLimit(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
   // Limit was not found, so figure out where it should be inserted
   // If last keyword is offset, need to put limit before that
   // If not offset, put limit at end, before terminator if present
   const insertBeforeToken = findParenLevelToken(
     queryTokens,
-    statementkeywordIndex,
+    statementKeywordIndex,
     (token) =>
       token.type === "keyword" &&
       (token.value === "offset" || token.value === "for")
@@ -182,7 +182,7 @@ function addLimit(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
   // If there is a terminator add it just before
   const terminatorToken = findParenLevelToken(
     queryTokens,
-    statementkeywordIndex,
+    statementKeywordIndex,
     (token) => token.type === "terminator"
   );
   if (terminatorToken) {
@@ -216,16 +216,16 @@ function addLimit(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
 /**
  * Adds limit to query that does not have it
  * @param {*} queryTokens
- * @param {*} statementkeywordIndex
+ * @param {*} statementKeywordIndex
  * @param {*} targetParenLevel
  * @param {*} limit
  */
-function addFetch(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
+function addFetch(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
   // fetch first was not found, so figure out where it should be inserted
   // fetch first goes at end before for if that exists. Otherwise before terminator if it exists
   const insertBeforeToken = findParenLevelToken(
     queryTokens,
-    statementkeywordIndex,
+    statementKeywordIndex,
     (token) => token.type === "keyword" && token.value === "for"
   );
 
@@ -255,7 +255,7 @@ function addFetch(queryTokens, statementkeywordIndex, targetParenLevel, limit) {
   // If there is a terminator add it just before
   const terminatorToken = findParenLevelToken(
     queryTokens,
-    statementkeywordIndex,
+    statementKeywordIndex,
     (token) => token.type === "terminator"
   );
   if (terminatorToken) {
@@ -298,7 +298,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
 
   const {
     statementKeyword,
-    statementkeywordIndex,
+    statementKeywordIndex,
     targetParenLevel,
   } = getStatementType(queryTokens);
 
@@ -308,7 +308,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   }
 
   if (strategies.includes("limit")) {
-    const limitResult = hasLimit(queryTokens, statementkeywordIndex);
+    const limitResult = hasLimit(queryTokens, statementKeywordIndex);
     if (limitResult) {
       // limit is there, so find next number and validate
       // is the next non-whitespace non-comment a number?
@@ -330,7 +330,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   }
 
   if (strategies.includes("fetch")) {
-    const fetchResult = hasFetch(queryTokens, statementkeywordIndex);
+    const fetchResult = hasFetch(queryTokens, statementKeywordIndex);
     if (fetchResult) {
       // limit is there, so find next number and validate
       // is the next non-whitespace non-comment a number?
@@ -356,7 +356,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   if (preferredStrategy === "limit") {
     return addLimit(
       queryTokens,
-      statementkeywordIndex,
+      statementKeywordIndex,
       targetParenLevel,
       limit
     );
@@ -364,7 +364,7 @@ function enforceLimit(queryTokens, limitStrategies, limit) {
   if (preferredStrategy === "fetch") {
     return addFetch(
       queryTokens,
-      statementkeywordIndex,
+      statementKeywordIndex,
       targetParenLevel,
       limit
     );

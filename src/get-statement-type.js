@@ -11,7 +11,7 @@ function getStatementType(queryTokens = []) {
   // statementKeyword will be `select`, `insert`, `alter`, etc.
   // keywords `with` and `as` not included to filter out cte
   let statementKeyword = "";
-  let statementkeywordIndex;
+  let statementKeywordIndex;
 
   for (let index = 0; index < queryTokens.length; index++) {
     const token = queryTokens[index];
@@ -42,7 +42,7 @@ function getStatementType(queryTokens = []) {
         token.value !== "as"
       ) {
         statementKeyword = token.value;
-        statementkeywordIndex = index;
+        statementKeywordIndex = index;
 
         // We've identified the statement keyword
         // We can exit the loop
@@ -52,7 +52,7 @@ function getStatementType(queryTokens = []) {
   }
 
   return {
-    statementkeywordIndex,
+    statementKeywordIndex,
     statementKeyword,
     targetParenLevel,
   };
