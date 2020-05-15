@@ -2,10 +2,15 @@
   import Diff from "text-diff";
   import Logo from "./Logo.svelte";
   import SqlDiff from "./SqlDiff.svelte";
+  import Strategies from "./Strategies.svelte";
 
-  let limitKeywords = "limit-fetch";
+  let strategy1 = "limit";
+  let strategy2 = "fetch";
+  let strategy3 = "";
   let limitNumber = 100;
   let original = `SELECT * FROM some_table;`;
+
+  $: limitStrategies = [strategy1, strategy2, strategy3].filter(s => s !== "");
 </script>
 
 <style>
@@ -77,13 +82,13 @@
 
   <div class="row">
     <div class="m8">
-      <label for="limit-keyword">limit strategy</label>
-      <select id="limit-keyword" class="input" bind:value={limitKeywords}>
-        <option value="limit">limit</option>
-        <option value="fetch">fetch</option>
-        <option value="fetch-limit">fetch, limit</option>
-        <option value="limit-fetch">limit, fetch</option>
-      </select>
+      <Strategies label="strategy 1" bind:value={strategy1} />
+    </div>
+    <div class="m8">
+      <Strategies label="strategy 2" bind:value={strategy2} />
+    </div>
+    <div class="m8">
+      <Strategies label="strategy 3" bind:value={strategy3} />
     </div>
     <div class="m8">
       <label for="limit-number">limit number</label>
@@ -103,7 +108,7 @@
     <div class="col-50 m8">
       <label>result</label>
       <pre class="sql out">
-        <SqlDiff sql={original} {limitKeywords} {limitNumber} />
+        <SqlDiff sql={original} strategies={limitStrategies} {limitNumber} />
       </pre>
     </div>
   </div>
