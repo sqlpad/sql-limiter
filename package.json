@@ -1,16 +1,10 @@
 {
   "name": "sql-limiter",
   "version": "2.1.0",
-  "description": "Injects and enforces LIMIT / FETCH FIRST in your SQL statements.",
+  "description": "Injects and enforces row limits in your SQL statements.",
   "keywords": [
     "sql",
-    "presto",
-    "sql-server",
-    "mysql",
-    "postgres",
-    "sqlite",
     "tokenize",
-    "parser",
     "lexer"
   ],
   "main": "src/index.js",
