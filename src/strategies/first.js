@@ -41,7 +41,7 @@ function has(tokens, startingIndex) {
  *
  * FIRST is an Actian keyword that operates similar to SQL Server's TOP.
  * TODO - find documentation/examples to figure out if there are any potential edge cases with this solution
- * Add link to documentation here if possible
+ * https://docs.actian.com/vectorhadoop/6.0/#page/SQLLang%2FSELECT_(Interactive).htm%23
  *
  * @param {Array<Object>} tokens
  * @param {Number} statementKeywordIndex
