@@ -1,6 +1,6 @@
 # sql-limiter
 
-Injects and enforces `LIMIT` (and `FETCH FIRST`, or both!) in your SQL statements. As of v2, `TOP` is no longer supported.
+Injects and enforces `LIMIT`, `FIRST`, and/or `FETCH` in your SQL statements.
 
 [Try it](https://rickbergfalk.github.io/sql-limiter/)
 
@@ -24,7 +24,7 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 ### `sqlLimiter.limit( sqlText, limitStrategies, limitNumber )`
 
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
-- `limitStrategies` - Keyword or array of keywords used to restrict rows. Must be either `limit` or `fetch` for `FETCH NEXT`/`FETCH FIRST`.
+- `limitStrategies` - Keyword or array of strategies used to restrict rows. Must be either `limit`, `first`, `fetch` for `FETCH NEXT`/`FETCH FIRST`.
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
 
 Returns `sqlText` with limits enforced.
@@ -81,13 +81,13 @@ This library is _not_ a full fledged SQL parser. You may run into some edge case
 
 ## FETCH FIRST/NEXT n ROWS ONLY
 
-Did you know that `LIMIT` is not standard SQL!? I didn't!
-
-It wasn't until SQL:2008 that a formal spec was added. Markus Winand has [a great guide written about this](https://use-the-index-luke.com/sql/partial-results/top-n-queries).
+`FETCH FIRST` was added into the SQL standard in SQL:2008. Markus Winand has [a great guide written about this](https://use-the-index-luke.com/sql/partial-results/top-n-queries).
 
 `sql-limiter` will look for `FETCH FIRST <number>` and `FETCH NEXT <number>` to detect the use of `FETCH` use. If neither are found, `FETCH FIRST <number> ROWS ONLY` will be added to the query.
 
-## Why TOP isn't supported
+The `fetch` strategy assumes that the target database honors the `FETCH FIRST` syntax alone, not requiring preceding `ORDER BY` or `OFFSET` clauses.
+
+## Why SQL Server isn't supported
 
 SQL Server's TOP is great for single SELECT queries, but becomes problematic for queries unioned together. `TOP` only applies to the `SELECT` clause it is used in, as opposed to acting on the entire unioned result set. For example:
 
@@ -104,9 +104,9 @@ SELECT * FROM million_row_table
 LIMIT 5
 ```
 
-To achieve the same effect as `LIMIT` using `TOP` in SQL Server, you must wrap the query, and put the `TOP` in the wrapping query instead, which can get messy in some scenarios.
+To achieve the same effect as `LIMIT` using `TOP` in SQL Server, you must wrap the query, and put the `TOP` in the wrapping query instead, which can difficult without a proper SQL parser and more complex queries.
 
-`FETCH FIRST` works similar to `LIMIT` in Postgres, and I presume similar in SQL Server 2012, IBM DB2, and Actian's Ingres.
+Instead of `TOP`, you could use `FETCH FIRST` in SQL Server 2012 and later, but is very strict! It requires preceding ORDER BY and OFFSET clauses to function, which could also prove to be difficult without a proper SQL parser (especially since variables and other things are supported in these clauses).
 
 ## Contributing
 
