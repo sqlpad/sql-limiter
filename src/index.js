@@ -27,6 +27,10 @@ function limit(sqlText, limitStrategies, limitNumber) {
     throw new Error("limitStrategies must be an array or string");
   }
 
+  if (strategies.length === 0) {
+    throw new Error("limitStrategies must not be empty");
+  }
+
   strategies = strategies.map((s) => s.toLowerCase());
 
   return getStatements(sqlText)

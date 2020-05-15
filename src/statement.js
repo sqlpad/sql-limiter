@@ -57,12 +57,15 @@ class Statement {
   enforceLimit(strategiesToEnforce, limitNumber) {
     const { statementToken, tokens } = this;
 
+    strategiesToEnforce.forEach((s) => {
+      if (!strategies[s]) {
+        throw new Error(`Strategy ${s} not supported`);
+      }
+    });
+
     if (statementToken && statementToken.value === "select") {
       for (const toEnforce of strategiesToEnforce) {
         const strategyImplementation = strategies[toEnforce];
-        if (!strategyImplementation) {
-          throw new Error(`Strategy ${toEnforce} not supported`);
-        }
         const numberToken = strategyImplementation.has(
           tokens,
           statementToken.index
