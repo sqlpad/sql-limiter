@@ -1,7 +1,5 @@
 const getStatements = require("./get-statements");
 
-const VALID_STRATEGIES = ["limit", "fetch"];
-
 /**
  * Enforce limit/top on SQL SELECT queries.
  * Non SELECT queries will not be altered.
@@ -30,14 +28,6 @@ function limit(sqlText, limitStrategies, limitNumber) {
   }
 
   strategies = strategies.map((s) => s.toLowerCase());
-
-  strategies.forEach((strategy) => {
-    if (!VALID_STRATEGIES.includes(strategy)) {
-      throw new Error(
-        `limitStrategies must be one of ${VALID_STRATEGIES.join(", ")}`
-      );
-    }
-  });
 
   return getStatements(sqlText)
     .map((statement) => {

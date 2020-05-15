@@ -1,4 +1,5 @@
-const enforceLimit = require("./enforce-limit");
+/* eslint-disable no-restricted-syntax */
+const strategies = require("./strategies");
 
 class Statement {
   constructor() {
@@ -48,12 +49,49 @@ class Statement {
     }
   }
 
-  enforceLimit(strategies, limitNumber) {
-    if (this.statementToken && this.statementToken.value === "select") {
-      this.tokens = enforceLimit(
-        this.statementToken,
-        this.tokens,
-        strategies,
+  /**
+   *
+   * @param {Array<String>} strategiesToEnforce
+   * @param {Number} limitNumber
+   */
+  enforceLimit(strategiesToEnforce, limitNumber) {
+    const { statementToken, tokens } = this;
+
+    if (statementToken && statementToken.value === "select") {
+      for (const toEnforce of strategiesToEnforce) {
+        const strategyImplementation = strategies[toEnforce];
+        if (!strategyImplementation) {
+          throw new Error(`Strategy ${toEnforce} not supported`);
+        }
+        const numberToken = strategyImplementation.has(
+          tokens,
+          statementToken.index
+        );
+
+        // If number token, check to see if over the limit and reset it if it is
+        // Otherwise return early
+        if (numberToken) {
+          if (parseInt(numberToken.value, 10) > limitNumber) {
+            const firstHalf = tokens.slice(0, numberToken.index);
+            const secondhalf = tokens.slice(numberToken.index + 1);
+            this.tokens = [
+              ...firstHalf,
+              { ...numberToken, text: limitNumber, value: limitNumber },
+              ...secondhalf,
+            ];
+            return;
+          }
+          return;
+        }
+      }
+
+      // An existing limit strategy was not found,
+      // so take the first one in list of strategies to enforce and add it to tokens
+      const preferredStrategy = strategiesToEnforce[0];
+      this.tokens = strategies[preferredStrategy].add(
+        tokens,
+        statementToken.index,
+        statementToken.parenLevel,
         limitNumber
       );
     }
