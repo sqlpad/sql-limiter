@@ -1,11 +1,11 @@
-const createToken = require("./create-token");
+const createToken = require("../create-token");
 const {
   findParenLevelToken,
   findLimitInsertionIndex,
   nextNonCommentNonWhitespace,
-} = require("./token-utils");
+} = require("../token-utils");
 
-function hasLimit(tokens, startingIndex) {
+function has(tokens, startingIndex) {
   const limitKeywordToken = findParenLevelToken(
     tokens,
     startingIndex,
@@ -29,10 +29,7 @@ function hasLimit(tokens, startingIndex) {
     throw new Error(`Expected number got ${nextNonWC.type}`);
   }
 
-  return {
-    limitKeywordToken,
-    limitNumberToken: nextNonWC,
-  };
+  return nextNonWC;
 }
 
 /**
@@ -42,7 +39,7 @@ function hasLimit(tokens, startingIndex) {
  * @param {*} targetParenLevel
  * @param {*} limit
  */
-function addLimit(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
+function add(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
   // Limit was not found, so figure out where it should be inserted
   // If last keyword is offset, need to put limit before that
   // If not offset, put limit at end, before terminator if present
@@ -100,5 +97,5 @@ function addLimit(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
   ];
 }
 
-exports.hasLimit = hasLimit;
-exports.addLimit = addLimit;
+exports.has = has;
+exports.add = add;

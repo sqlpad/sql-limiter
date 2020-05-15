@@ -1,36 +1,43 @@
-const { hasLimit, addLimit } = require("./limit-strategy");
-const { hasFetch, addFetch } = require("./fetch-strategy");
+/* eslint-disable no-restricted-syntax */
+const strategies = require("./strategies");
 
 /**
  * Detects, enforces or injects a limit using strategies specified.
  * @param {object} statementTypeToken
  * @param {Array<Object>} queryTokens
  * @param {Array<String>|String} limitStrategies
- * @param {Number} limit
+ * @param {Number} limitNumber
  */
-function enforceLimit(statementTypeToken, queryTokens, limitStrategies, limit) {
-  const strategies =
+function enforceLimit(
+  statementTypeToken,
+  queryTokens,
+  limitStrategies,
+  limitNumber
+) {
+  const strategiesToEnforce =
     typeof limitStrategies === "string" ? [limitStrategies] : limitStrategies;
 
-  if (!Array.isArray(strategies)) {
+  if (!Array.isArray(strategiesToEnforce)) {
     throw new Error("limit strategies must be array or string");
   }
 
-  if (strategies.includes("limit")) {
-    const limitResult = hasLimit(queryTokens, statementTypeToken.index);
-    if (limitResult) {
-      // limit is there, so find next number and validate
-      // is the next non-whitespace non-comment a number?
-      // If so, enforce that number be no larger than limit
-      const { limitNumberToken } = limitResult;
-
+  for (const toEnforce of strategiesToEnforce) {
+    const strategyImplementation = strategies[toEnforce];
+    if (!strategyImplementation) {
+      throw new Error(`Strategy ${toEnforce} not supported`);
+    }
+    const numberToken = strategyImplementation.has(
+      queryTokens,
+      statementTypeToken.index
+    );
+    if (numberToken) {
       // If the number if over the limit, reset it
-      if (parseInt(limitNumberToken.value, 10) > limit) {
-        const firstHalf = queryTokens.slice(0, limitNumberToken.index);
-        const secondhalf = queryTokens.slice(limitNumberToken.index + 1);
+      if (parseInt(numberToken.value, 10) > limitNumber) {
+        const firstHalf = queryTokens.slice(0, numberToken.index);
+        const secondhalf = queryTokens.slice(numberToken.index + 1);
         return [
           ...firstHalf,
-          { ...limitNumberToken, text: limit, value: limit },
+          { ...numberToken, text: limitNumber, value: limitNumber },
           ...secondhalf,
         ];
       }
@@ -38,48 +45,13 @@ function enforceLimit(statementTypeToken, queryTokens, limitStrategies, limit) {
     }
   }
 
-  if (strategies.includes("fetch")) {
-    const fetchResult = hasFetch(queryTokens, statementTypeToken.index);
-    if (fetchResult) {
-      // limit is there, so find next number and validate
-      // is the next non-whitespace non-comment a number?
-      // If so, enforce that number be no larger than limit
-      const { fetchNumberToken } = fetchResult;
-
-      // If the number if over the limit, reset it
-      if (parseInt(fetchNumberToken.value, 10) > limit) {
-        const firstHalf = queryTokens.slice(0, fetchNumberToken.index);
-        const secondhalf = queryTokens.slice(fetchNumberToken.index + 1);
-        return [
-          ...firstHalf,
-          { ...fetchNumberToken, text: limit, value: limit },
-          ...secondhalf,
-        ];
-      }
-      return queryTokens;
-    }
-  }
-
-  const preferredStrategy = strategies[0];
-
-  if (preferredStrategy === "limit") {
-    return addLimit(
-      queryTokens,
-      statementTypeToken.index,
-      statementTypeToken.parenLevel,
-      limit
-    );
-  }
-  if (preferredStrategy === "fetch") {
-    return addFetch(
-      queryTokens,
-      statementTypeToken.index,
-      statementTypeToken.parenLevel,
-      limit
-    );
-  }
-
-  return [];
+  const preferredStrategy = strategiesToEnforce[0];
+  return strategies[preferredStrategy].add(
+    queryTokens,
+    statementTypeToken.index,
+    statementTypeToken.parenLevel,
+    limitNumber
+  );
 }
 
 module.exports = enforceLimit;

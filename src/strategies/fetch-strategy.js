@@ -1,9 +1,9 @@
-const createToken = require("./create-token");
+const createToken = require("../create-token");
 const {
   findParenLevelToken,
   findLimitInsertionIndex,
   nextNonCommentNonWhitespace,
-} = require("./token-utils");
+} = require("../token-utils");
 
 /**
  * Determines whether query tokens have "FETCH" style limits
@@ -25,7 +25,7 @@ const {
  * @param {array<object>} tokens
  * @param {number} startingIndex
  */
-function hasFetch(tokens, startingIndex) {
+function has(tokens, startingIndex) {
   const fetchKeywordToken = findParenLevelToken(
     tokens,
     startingIndex,
@@ -60,10 +60,7 @@ function hasFetch(tokens, startingIndex) {
     throw new Error(`Expected number got ${nextNonWC.type}`);
   }
 
-  return {
-    fetchKeywordToken,
-    fetchNumberToken: nextNonWC,
-  };
+  return nextNonWC;
 }
 
 /**
@@ -73,7 +70,7 @@ function hasFetch(tokens, startingIndex) {
  * @param {*} targetParenLevel
  * @param {*} limit
  */
-function addFetch(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
+function add(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
   // fetch first was not found, so figure out where it should be inserted
   // fetch first goes at end before for if that exists. Otherwise before terminator if it exists
   const insertBeforeToken = findParenLevelToken(
@@ -136,6 +133,6 @@ function addFetch(queryTokens, statementKeywordIndex, targetParenLevel, limit) {
 }
 
 module.exports = {
-  hasFetch,
-  addFetch,
+  has,
+  add,
 };
