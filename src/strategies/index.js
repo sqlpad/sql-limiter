@@ -1,7 +1,9 @@
-const limitStrategy = require("./limit-strategy");
-const fetchStrategy = require("./fetch-strategy");
+const limit = require("./limit");
+const fetch = require("./fetch");
+const first = require("./first");
 
 module.exports = {
-  limit: limitStrategy,
-  fetch: fetchStrategy,
+  limit,
+  fetch,
+  first,
 };
