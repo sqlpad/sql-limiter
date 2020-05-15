@@ -1,5 +1,6 @@
 const moo = require("moo");
 const keywords = require("./keywords.js");
+const Statement = require("./statement");
 
 // Incoming values will also be compared as lower case to make keyword matching case insensitive
 const caseInsensitiveKeywords = (defs) => {
@@ -62,15 +63,26 @@ const lexer = moo.compile({
  * Takes SQL text and generates an array of tokens using moo
  * @param {string} sqlText
  */
-function tokenize(sqlText) {
-  const tokens = [];
+function getStatements(sqlText) {
+  const statements = [];
+  let statement = new Statement();
+
   lexer.reset(sqlText);
   let next = lexer.next();
+
   while (next) {
-    tokens.push(next);
+    statement.appendToken(next);
+    if (next.type === "terminator") {
+      statements.push(statement);
+      statement = new Statement();
+    }
     next = lexer.next();
   }
-  return tokens;
+  // push last set
+  if (statement.tokens.length) {
+    statements.push(statement);
+  }
+  return statements;
 }
 
-module.exports = tokenize;
+module.exports = getStatements;
