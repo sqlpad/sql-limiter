@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0] - 2020-05-15
+
+- Add `FIRST` support back
+
 ## [2.0.0] - 2020-05-11
 
 - Added support for `FETCH FIRST/NEXT`, and `LIMIT` at same time
@@ -8,7 +12,7 @@
 
 ## [1.0.3] - 2020-05-10
 
-- Fix: Remove `FIRST` from documentation. It doesn't actually do anything useful.
+- Fix: Remove `FIRST` from documentation.
 
 ## [1.0.2] - 2020-05-10
 
