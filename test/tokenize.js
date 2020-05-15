@@ -1,8 +1,12 @@
 const assert = require("assert");
-const tokenize = require("../src/tokenize");
+const getStatements = require("../src/get-statements");
 
 function hasTokens(str, type, value, count) {
-  const tokens = tokenize(str);
+  const statements = getStatements(str);
+  let tokens = [];
+  statements.forEach((statement) => {
+    tokens = [...tokens, ...statement.tokens];
+  });
   const actualCount = tokens.filter((t) => t.value === value && t.type === type)
     .length;
 
@@ -134,7 +138,7 @@ describe("tokenize", function () {
       */
         */
     `;
-    const tokens = tokenize(query);
-    assert(tokens);
+    const statements = getStatements(query);
+    assert(statements[0]);
   });
 });

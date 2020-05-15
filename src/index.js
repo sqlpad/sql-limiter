@@ -1,7 +1,4 @@
-const getQueriesTokens = require("./get-queries-tokens");
-const enforceLimit = require("./enforce-limit.js");
-
-const VALID_STRATEGIES = ["limit", "fetch"];
+const getStatements = require("./get-statements");
 
 /**
  * Enforce limit/top on SQL SELECT queries.
@@ -32,40 +29,24 @@ function limit(sqlText, limitStrategies, limitNumber) {
 
   strategies = strategies.map((s) => s.toLowerCase());
 
-  strategies.forEach((strategy) => {
-    if (!VALID_STRATEGIES.includes(strategy)) {
-      throw new Error(
-        `limitStrategies must be one of ${VALID_STRATEGIES.join(", ")}`
-      );
-    }
-  });
-
-  let enforcedSql = "";
-
-  const queriesTokens = getQueriesTokens(sqlText);
-
-  queriesTokens.forEach((queryTokens) => {
-    let enforcedTokens = [];
-    enforcedTokens = enforceLimit(queryTokens, strategies, limitNumber);
-    enforcedSql += enforcedTokens.map((t) => t.text).join("");
-  });
-
-  // Return a string
-  return enforcedSql;
+  return getStatements(sqlText)
+    .map((statement) => {
+      statement.enforceLimit(strategies, limitNumber);
+      return statement.toString();
+    })
+    .join("");
 }
 
 /**
  * Splits SQL text on terminator, returning an array of SQL statements
  * @param {string} sqlText
  */
-function getStatements(sqlText) {
+function apiGetStatements(sqlText) {
   if (typeof sqlText !== "string") {
     throw new Error("sqlText must be string");
   }
-  const queriesTokens = getQueriesTokens(sqlText);
-  return queriesTokens.map((queryTokens) =>
-    queryTokens.map((t) => t.text).join("")
-  );
+  const statements = getStatements(sqlText);
+  return statements.map((statement) => statement.toString());
 }
 
 /**
@@ -78,16 +59,9 @@ function removeTerminator(sqlStatement) {
   if (typeof sqlStatement !== "string") {
     throw new Error("sqlText must be string");
   }
-  const queriesTokens = getQueriesTokens(sqlStatement);
-
-  const statements = queriesTokens
-    .map((queryTokens) =>
-      queryTokens
-        .filter((t) => t.type !== "terminator")
-        .map((t) => t.text)
-        .join("")
-    )
-    .filter((statement) => statement.trim() !== "");
+  const statements = getStatements(sqlStatement)
+    .map((s) => s.toString(true))
+    .filter((s) => s.trim() !== "");
 
   if (statements.length > 1) {
     throw new Error("Multiple statements detected");
@@ -98,6 +72,6 @@ function removeTerminator(sqlStatement) {
 
 module.exports = {
   limit,
-  getStatements,
+  getStatements: apiGetStatements,
   removeTerminator,
 };
