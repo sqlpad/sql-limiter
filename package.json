@@ -15,7 +15,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha test",
+    "test": "mocha test --bail",
     "fixlint": "eslint --fix \"**/*.js\"",
     "lint": "eslint \"**/*.js\"",
     "prepublishOnly": "npm test && npm run lint"
