@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.1] - 2020-05-31
+
+- Fix Windows line ending detection
+
 ## [2.1.0] - 2020-05-15
 
 - Add `FIRST` support back
