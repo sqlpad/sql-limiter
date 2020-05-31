@@ -9,7 +9,11 @@ const caseInsensitiveKeywords = (defs) => {
 };
 
 const lexer = moo.compile({
-  whitespace: [/[ \t]+/, { match: /\n/, lineBreaks: true }],
+  whitespace: [
+    /[ \t]+/,
+    { match: /\r\n/, lineBreaks: true },
+    { match: /\n/, lineBreaks: true },
+  ],
   // First expression is --line comment, second is /* multi line */
   comment: [/--.*?$/, /\/\*[^]*?\*\//],
   lparen: "(",

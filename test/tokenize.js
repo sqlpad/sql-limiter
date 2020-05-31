@@ -100,6 +100,10 @@ describe("tokenize", function () {
     hasTokens(`select ; \\g ;`, "terminator", "\\g", 1);
   });
 
+  it("handles windows line ending", function () {
+    hasTokens(`select ;-- comment\r\n select;`, "terminator", ";", 2);
+  });
+
   it("tokenizes random", function () {
     const query = `
       , ,,
