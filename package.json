@@ -1,6 +1,6 @@
 {
   "name": "sql-limiter",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Injects and enforces row limits in your SQL statements.",
   "keywords": [
     "sql",
