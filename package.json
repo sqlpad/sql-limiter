@@ -9,6 +9,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
+    "build-docs": "npm run build --prefix docs-src",
     "test": "mocha test --bail",
     "fixlint": "eslint --fix \"**/*.js\"",
     "lint": "eslint \"**/*.js\"",
