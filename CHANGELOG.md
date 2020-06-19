@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.2.0] - 2020-06-19
+
+- Add support for non-English identifiers
+- Add support for backtick quoted identifiers
+
 ## [2.1.1] - 2020-05-31
 
 - Fix Windows line ending detection
