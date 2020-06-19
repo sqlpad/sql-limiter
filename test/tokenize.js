@@ -108,6 +108,11 @@ describe("tokenize", function () {
     hasTokens("select `col`", "quotedIdentifier", "col", 1);
   });
 
+  it("handles non-english identifiers", function () {
+    hasTokens("select 姓名n from test;", "identifier", "姓名n", 1);
+    hasTokens("select 姓名n from TEST;", "identifier", "test", 1);
+  });
+
   it("tokenizes random", function () {
     const query = `
       , ,,
