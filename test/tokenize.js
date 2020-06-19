@@ -104,6 +104,10 @@ describe("tokenize", function () {
     hasTokens(`select ;-- comment\r\n select;`, "terminator", ";", 2);
   });
 
+  it("handles backtick identifiers", function () {
+    hasTokens("select `col`", "quotedIdentifier", "col", 1);
+  });
+
   it("tokenizes random", function () {
     const query = `
       , ,,
@@ -119,7 +123,6 @@ describe("tokenize", function () {
       } }}
       ] ]] [ [[
       { {{
-      \` \`\`
       ~ ~~
       ! !!
       @ @@

@@ -38,6 +38,10 @@ const lexer = moo.compile({
       match: /\[.*?\]/,
       value: (x) => x.slice(1, -1),
     },
+    {
+      match: /`.*?`/,
+      value: (x) => x.slice(1, -1),
+    },
   ],
 
   // text == original text
