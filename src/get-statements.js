@@ -44,8 +44,16 @@ const lexer = moo.compile({
     },
   ],
 
-  // text == original text
-  string: /'(?:\\['\\]|[^\n'\\])*'/u,
+  // Updated to allow multi-line strings,
+  // which is allowed by some database drivers (sqlite, actian)
+  // This does not correctly handle escaped doublequotes, however the end result is ok for sql-limiter
+  // Instead of a single string token we get 2 separate string tokens back-to-back
+  string: [
+    {
+      match: /'[^']*'/u,
+      lineBreaks: true,
+    },
+  ],
 
   // Remaining test is assumed to be an identifier of some kinds (column or table)
   // UNLESS it matches a keyword case insensitively
