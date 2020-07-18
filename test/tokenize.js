@@ -1,6 +1,16 @@
 const assert = require("assert");
 const getStatements = require("../src/get-statements");
 
+// Helpful for debugging what hasTokens is getting
+// function getTokens(str) {
+//   const statements = getStatements(str);
+//   let tokens = [];
+//   statements.forEach((statement) => {
+//     tokens = [...tokens, ...statement.tokens];
+//   });
+//   return tokens;
+// }
+
 function hasTokens(str, type, value, count) {
   const statements = getStatements(str);
   let tokens = [];
@@ -111,6 +121,22 @@ describe("tokenize", function () {
   it("handles non-english identifiers", function () {
     hasTokens("select 姓名n from test;", "identifier", "姓名n", 1);
     hasTokens("select 姓名n from TEST;", "identifier", "test", 1);
+  });
+
+  it("handles multiline string", function () {
+    const str = `SELECT 'hello 
+    world' FROM table;`;
+    hasTokens(str, "keyword", "from", 1);
+  });
+
+  it("handles regex escape for postgres", function () {
+    const str = `select 'abc''def' ~ 'def\\M' from;`;
+    hasTokens(str, "keyword", "from", 1);
+    // NOTE - string escape not being handled doesn't need to behave this way,
+    // but it doesn't hurt that it does
+    hasTokens(str, "string", "'abc'", 1);
+    hasTokens(str, "string", "'def'", 1);
+    hasTokens(str, "string", "'def\\M'", 1);
   });
 
   it("tokenizes random", function () {
