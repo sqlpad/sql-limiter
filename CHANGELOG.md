@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.3.0] - 2020-07-17
+
+- Add support for multiline strings
+- Fix regex escapes within strings
+
 ## [2.2.0] - 2020-06-19
 
 - Add support for non-English identifiers
