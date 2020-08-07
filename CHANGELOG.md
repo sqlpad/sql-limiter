@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.0] - 2020-08-07
+
+- Add `top` strategy
+
 ## [2.3.0] - 2020-07-17
 
 - Add support for multiline strings
