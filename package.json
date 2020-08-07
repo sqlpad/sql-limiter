@@ -17,14 +17,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rickbergfalk/sql-limiter.git"
+    "url": "git+https://github.com/sqlpad/sql-limiter.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rickbergfalk/sql-limiter/issues"
+    "url": "https://github.com/sqlpad/sql-limiter/issues"
   },
-  "homepage": "https://github.com/rickbergfalk/sql-limiter#readme",
+  "homepage": "https://github.com/sqlpad/sql-limiter#readme",
   "dependencies": {
     "moo": "^0.5.1"
   },
