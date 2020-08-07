@@ -24,7 +24,7 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 ### `sqlLimiter.limit( sqlText, limitStrategies, limitNumber )`
 
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
-- `limitStrategies` - Keyword or array of strategies used to restrict rows. Must be either `limit`, `first`, `fetch` for `FETCH NEXT`/`FETCH FIRST`.
+- `limitStrategies` - Keyword or array of strategies used to restrict rows. Must be either `limit`, `first`, `top`, `fetch` for `FETCH NEXT`/`FETCH FIRST`.
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
 
 Returns `sqlText` with limits enforced.
@@ -87,7 +87,9 @@ This library is _not_ a full fledged SQL parser. You may run into some edge case
 
 The `fetch` strategy assumes that the target database honors the `FETCH FIRST` syntax alone, not requiring preceding `ORDER BY` or `OFFSET` clauses.
 
-## Why SQL Server isn't supported
+## SQL Server Users Beware
+
+While `sql-limiter` has a `top` strategy and `fetch` strategy, **it most likely will not meet your needs if you are trying to limit SQL intended for SQL Server**.
 
 SQL Server's TOP is great for single SELECT queries, but becomes problematic for queries unioned together. `TOP` only applies to the `SELECT` clause it is used in, as opposed to acting on the entire unioned result set. For example:
 
@@ -104,9 +106,9 @@ SELECT * FROM million_row_table
 LIMIT 5
 ```
 
-To achieve the same effect as `LIMIT` using `TOP` in SQL Server, you must wrap the query, and put the `TOP` in the wrapping query instead, which can difficult without a proper SQL parser and more complex queries.
+To achieve the same effect as `LIMIT` using `TOP` in SQL Server, you must wrap the query, and put the `TOP` in the wrapping query instead. This can be difficult without a proper SQL parser.
 
-Instead of `TOP`, you could use `FETCH FIRST` in SQL Server 2012 and later, but is very strict! It requires preceding ORDER BY and OFFSET clauses to function, which could also prove to be difficult without a proper SQL parser (especially since variables and other things are supported in these clauses).
+Instead of `TOP`, you could use `FETCH FIRST` in SQL Server 2012 and later, but is very strict! It requires preceding ORDER BY and OFFSET clauses to function, which also prove to be difficult to support and detect without a proper SQL parser (especially since variables and other things are supported in these clauses).
 
 ## Contributing
 
