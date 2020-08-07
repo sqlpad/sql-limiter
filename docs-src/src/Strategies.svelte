@@ -19,7 +19,8 @@
   <option value="">
     <em>none</em>
   </option>
-  <option value="limit">limit</option>
   <option value="fetch">fetch</option>
   <option value="first">first</option>
+  <option value="limit">limit</option>
+  <option value="top">top</option>
 </select>
