@@ -1,5 +1,4 @@
 <script>
-  import Diff from "text-diff";
   import Logo from "./Logo.svelte";
   import SqlDiff from "./SqlDiff.svelte";
   import Strategies from "./Strategies.svelte";
@@ -10,8 +9,54 @@
   let limitNumber = 100;
   let original = `SELECT * FROM some_table;`;
 
-  $: limitStrategies = [strategy1, strategy2, strategy3].filter(s => s !== "");
+  $: limitStrategies = [strategy1, strategy2, strategy3].filter(
+    (s) => s !== ""
+  );
 </script>
+
+<main>
+  <Logo />
+  <div class="row">
+    <div class="col-100 m8">
+      <h1>sql-limiter</h1>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="m8">
+      <Strategies label="strategy 1" bind:value={strategy1} />
+    </div>
+    <div class="m8">
+      <Strategies label="strategy 2" bind:value={strategy2} />
+    </div>
+    <div class="m8">
+      <Strategies label="strategy 3" bind:value={strategy3} />
+    </div>
+    <div class="m8">
+      <label for="limit-number">limit number</label>
+      <input
+        id="limit-number"
+        class="input"
+        type="number"
+        bind:value={limitNumber}
+      />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-50 m8">
+      <label for="sql-in">input</label>
+      <textarea id="sql-in" class="sql" rows="15" bind:value={original} />
+    </div>
+    <div class="col-50 m8">
+      <span class="fake-label">result</span>
+      <pre
+        class="sql out">
+        <SqlDiff sql={original} strategies={limitStrategies} {limitNumber} />
+      </pre>
+    </div>
+  </div>
+</main>
 
 <style>
   h1 {
@@ -69,48 +114,8 @@
   .out {
     overflow-x: auto;
   }
+
+  .fake-label {
+    font-variant: small-caps;
+  }
 </style>
-
-<main>
-  <Logo />
-  <div class="row">
-    <div class="col-100 m8">
-      <h1>sql-limiter</h1>
-
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="m8">
-      <Strategies label="strategy 1" bind:value={strategy1} />
-    </div>
-    <div class="m8">
-      <Strategies label="strategy 2" bind:value={strategy2} />
-    </div>
-    <div class="m8">
-      <Strategies label="strategy 3" bind:value={strategy3} />
-    </div>
-    <div class="m8">
-      <label for="limit-number">limit number</label>
-      <input
-        id="limit-number"
-        class="input"
-        type="number"
-        bind:value={limitNumber} />
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-50 m8">
-      <label for="sql-in">input</label>
-      <textarea id="sql-in" class="sql" rows="15" bind:value={original} />
-    </div>
-    <div class="col-50 m8">
-      <label>result</label>
-      <pre class="sql out">
-        <SqlDiff sql={original} strategies={limitStrategies} {limitNumber} />
-      </pre>
-    </div>
-  </div>
-
-</main>

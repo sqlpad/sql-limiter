@@ -1,7 +1,6 @@
 <script>
   import sqlLimiter from "../../src/index.js";
   import Diff from "text-diff";
-  import Logo from "./Logo.svelte";
 
   export let sql = "";
   export let strategies = ["limit"];
@@ -23,6 +22,12 @@
   }
 </script>
 
+{#if error}
+  <span class="error">{error}</span>
+{:else}
+  {@html prettyHtml}
+{/if}
+
 <style>
   :global(ins) {
     color: green;
@@ -36,9 +41,3 @@
     color: red;
   }
 </style>
-
-{#if error}
-  <span class="error">{error}</span>
-{:else}
-  {@html prettyHtml}
-{/if}
