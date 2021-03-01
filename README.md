@@ -2,7 +2,7 @@
 
 Injects and enforces `LIMIT`, `FIRST`, and/or `FETCH` in your SQL statements.
 
-[Try it](https://rickbergfalk.github.io/sql-limiter/)
+[Try it](https://sqlpad.github.io/sql-limiter/)
 
 ```js
 const sqlLimiter = require("sql-limiter");
