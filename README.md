@@ -65,7 +65,7 @@ Returns `sqlStatement` string with terminator removed. Used by `sql-limiter` int
 
 ## Why
 
-`sql-limiter` was initially created to enforce SQL limits in [SQLPad](https://github.com/rickbergfalk/sqlpad).
+`sql-limiter` was initially created to enforce SQL limits in [SQLPad](https://github.com/sqlpad/sqlpad).
 
 In SQLPad, users run arbitrary SQL against a database, and the application needs to be protected from `SELECT * FROM really_big_table` queries.
 
