@@ -16,20 +16,57 @@ function has(tokens, startingIndex) {
     return null;
   }
 
-  const nextNonWC = nextNonCommentNonWhitespace(
+  // Supported LIMIT syntaxes
+  // LIMIT <limit_number>                   (most common)
+  // LIMIT <offset_number>,<limit_number>   (supported by ClickHouse)
+
+  const firstNumber = nextNonCommentNonWhitespace(
     tokens,
     limitKeywordToken.index + 1
   );
 
-  if (!nextNonWC) {
+  if (!firstNumber) {
     throw new Error("Unexpected end of statement");
   }
 
-  if (nextNonWC.type !== "number") {
-    throw new Error(`Expected number got ${nextNonWC.type}`);
+  if (firstNumber.type !== "number") {
+    throw new Error(`Expected number got ${firstNumber.type}`);
   }
 
-  return nextNonWC;
+  // Check to see if next non whitespace past first number is a comma
+  // If it is, and that is followed by another number
+  // We are likely dealing with a ClickHouse LIMIT <offset_number>,<limit_number> syntax
+  const possibleComma = nextNonCommentNonWhitespace(
+    tokens,
+    firstNumber.index + 1
+  );
+
+  // If next token doesn't exist, or is not a comma
+  // return the first number as it is the limit
+  if (!possibleComma) {
+    return firstNumber;
+  }
+
+  if (possibleComma.type !== "comma") {
+    return firstNumber;
+  }
+
+  // Since we are dealing with "LIMIT <number> <comma>" find next number,
+  // as it will be the actual limit for ClickHouse syntax
+  const secondNumber = nextNonCommentNonWhitespace(
+    tokens,
+    possibleComma.index + 1
+  );
+
+  if (!secondNumber) {
+    throw new Error("Unexpected end of statement");
+  }
+
+  if (secondNumber.type !== "number") {
+    throw new Error(`Expected number got ${secondNumber.type}`);
+  }
+
+  return secondNumber;
 }
 
 /**

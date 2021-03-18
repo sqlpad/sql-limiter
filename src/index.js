@@ -8,7 +8,7 @@ const getStatements = require("./get-statements");
  * Returns SQL text with limits enforced.
  *
  * @param {string} sqlText - sql text to limit
- * @param {Array<String>|String} limitStrategies -- Values must be `limit` and/or `fetch`. First value takes priority if no limit exists
+ * @param {Array<String>|String} limitStrategies -- First strategy value takes priority if no limit exists
  * @param {number} limitNumber -- number to enforce for limit keyword
  * @returns {string}
  */
