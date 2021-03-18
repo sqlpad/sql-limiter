@@ -47,6 +47,25 @@ describe("limit", function () {
     );
   });
 
+  it("handles offset,limit", function () {
+    test(
+      `SELECT * FROM something limit 0,999`,
+      `SELECT * FROM something limit 0,100`
+    );
+    test(
+      `SELECT * FROM something limit 0 , 999`,
+      `SELECT * FROM something limit 0 , 100`
+    );
+    test(
+      `SELECT * FROM something limit 0 , 9`,
+      `SELECT * FROM something limit 0 , 9`
+    );
+  });
+
+  it("throws for unexpected limit number comma", function () {
+    assert.throws(() => test(`SELECT * FROM something limit 0 ,`));
+  });
+
   it("handles trailing line comment", function () {
     test(
       `SELECT * FROM something -- comment`,
