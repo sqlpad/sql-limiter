@@ -253,6 +253,7 @@ module.exports = [
   "set",
   "setuser",
   "share",
+  "show",
   "shutdown",
   "size",
   "skip",
