@@ -64,3 +64,23 @@ describe("api: limit", function () {
     assert.equal(res, expected);
   });
 });
+
+describe("api: getStatementType", function () {
+  it("throws errors for multiple statements", function () {
+    assert.throws(() => sqlLimiter.getStatementType(`SELECT *; SELECT *;`));
+  });
+
+  it("returns correct keywords", function () {
+    assert.strictEqual(sqlLimiter.getStatementType("SELECT *"), "select");
+    assert.strictEqual(
+      sqlLimiter.getStatementType("-- select comment"),
+      undefined
+    );
+    assert.strictEqual(
+      sqlLimiter.getStatementType(
+        "WITH something AS (SELECT) INSERT INTO blah *"
+      ),
+      "insert"
+    );
+  });
+});

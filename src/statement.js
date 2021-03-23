@@ -11,6 +11,18 @@ class Statement {
     this.limitToken = null;
   }
 
+  /**
+   * Returns the statement type keyword in lower case.
+   * If CTE is detected, the first keywords after WITH and AS is returned
+   * @returns string
+   */
+  getStatementType() {
+    if (this.statementToken) {
+      return this.statementToken.value;
+    }
+    return undefined;
+  }
+
   appendToken(t) {
     const token = { ...t };
     token.parenLevel = this.parenLevel;

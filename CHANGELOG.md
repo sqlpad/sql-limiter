@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.6.0] - 2021-03-22
+
+- Add `getStatementType` function
+
 ## [2.5.0] - 2021-03-18
 
 - Add support for ClickHouse `LIMIT <offset>, <number>` syntax
