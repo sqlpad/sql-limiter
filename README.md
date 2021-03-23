@@ -63,6 +63,20 @@ Returns array of statement strings. Used by `sql-limiter` internally but exposed
 
 Returns `sqlStatement` string with terminator removed. Used by `sql-limiter` internally but exposed for your convenience
 
+### `sqlLimiter.getStatementType( sqlStatement )`
+
+- `sqlStatement` - Single SQL statement text to get type keyword from.
+
+Returns `sqlStatement` type keyword in lower case. This will be the first keyword of the SQL query, sans `with` and `as` for CTE queries.
+
+```js
+console.log(sqlLimiter.getStatementType("SELECT * FROM ...")); // "select"
+console.log(
+  sqlLimiter.getStatementType("WITH foo AS (SELECT ...) INSERT INTO ... ")
+); // "insert"
+console.log(sqlLimiter.getStatementType("-- just a comment")); // undefined
+```
+
 ## Why
 
 `sql-limiter` was initially created to enforce SQL limits in [SQLPad](https://github.com/sqlpad/sqlpad).

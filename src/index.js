@@ -74,8 +74,30 @@ function removeTerminator(sqlStatement) {
   return statements[0];
 }
 
+/**
+ * Gets statement type keyword from statement string (select, update, delete, etc)
+ * Only a single statement allowed.
+ * Throws error if multiple statements are included
+ * @param {string} statementType
+ */
+function getStatementType(sqlStatement) {
+  if (typeof sqlStatement !== "string") {
+    throw new Error("sqlText must be string");
+  }
+  const statementObjects = getStatements(sqlStatement).filter(
+    (s) => s.toString().trim() !== ""
+  );
+
+  if (statementObjects.length > 1) {
+    throw new Error("Multiple statements detected");
+  }
+
+  return statementObjects[0].getStatementType();
+}
+
 module.exports = {
-  limit,
   getStatements: apiGetStatements,
+  getStatementType,
+  limit,
   removeTerminator,
 };
