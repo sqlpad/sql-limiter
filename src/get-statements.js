@@ -1,5 +1,5 @@
 const moo = require("moo");
-const keywords = require("./keywords.js");
+const keywords = require("./keywords");
 const Statement = require("./statement");
 
 // Incoming values will also be compared as lower case to make keyword matching case insensitive

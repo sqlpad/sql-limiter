@@ -17,8 +17,9 @@ function hasTokens(str, type, value, count) {
   statements.forEach((statement) => {
     tokens = [...tokens, ...statement.tokens];
   });
-  const actualCount = tokens.filter((t) => t.value === value && t.type === type)
-    .length;
+  const actualCount = tokens.filter(
+    (t) => t.value === value && t.type === type
+  ).length;
 
   assert.equal(
     actualCount,
