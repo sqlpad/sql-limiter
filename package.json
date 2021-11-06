@@ -12,7 +12,7 @@
     "build-docs": "npm run build --prefix docs-src",
     "test": "mocha test --bail",
     "fixlint": "eslint --fix \"**/*.js\"",
-    "lint": "eslint \"**/*.js\"",
+    "lint": "eslint \"**/*.js\" && prettier --check .",
     "prepublishOnly": "npm test && npm run lint"
   },
   "repository": {
@@ -29,12 +29,9 @@
     "moo": "^0.5.1"
   },
   "devDependencies": {
-    "eslint": "^7.22.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-prettier": "^3.3.1",
-    "mocha": "^8.3.2",
-    "prettier": "^2.2.1"
+    "eslint": "^8.2.0",
+    "eslint-config-prettier": "^8.3.0",
+    "mocha": "^9.1.3",
+    "prettier": "^2.4.1"
   }
 }
