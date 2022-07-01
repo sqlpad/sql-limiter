@@ -3,8 +3,12 @@ const strategies = require("./strategies");
 
 class Statement {
   constructor() {
+    this.endReached = false;
+    this.isProcedure = false;
     this.tokens = [];
     this.parenLevel = 0;
+    this.beginCount = 0;
+    this.endCount = 0;
     this.targetParenLevel = null;
     this.statementToken = null;
     this.fetchToken = null;
@@ -30,11 +34,33 @@ class Statement {
     token.index = this.tokens.length;
     this.tokens.push(token);
 
-    if (token.type === "lparen") {
+    // Keep track of level of begin/end.
+    // This is for tracking begin/end blocks for stored procedures and similar
+    // Queries within begin/end are ignored for better or for worse
+    if (token.type === "keyword" && token.value === "begin") {
+      this.beginCount++;
+    } else if (token.type === "keyword" && token.value === "end") {
+      this.endCount++;
+    }
+
+    // If terminator and we're not inside a BEGIN/END block
+    if (token.type === "terminator" && this.beginCount === this.endCount) {
+      // This is funky, but some procedure syntaxes like Actian allow a terminator before the BEGIN keyword
+      // *Most* procedures use BEGIN/END blocks though, so if we're dealing with a procedure, make sure we've had at least 1 END
+      // (not sure if BEGIN/END can be nested)
+      // Otherwise if this is not a procedure and we're dealing with a terminator, the terminator outside a BEGIN/END block is the real terminator
+      if ((this.isProcedure && this.endCount > 0) || !this.isProcedure) {
+        this.endReached = true;
+      }
+    } else if (token.type === "lparen") {
       this.parenLevel++;
     } else if (token.type === "rparen") {
       this.parenLevel--;
     } else if (token.type === "keyword") {
+      if (token.value === "procedure") {
+        this.isProcedure = true;
+      }
+
       // If targetParenLevel has not yet been set,
       // we are dealing with the first keyword, which informs us of the "level"
       // we want to consider for finding SELECT statments
