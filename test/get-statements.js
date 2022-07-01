@@ -32,7 +32,7 @@ describe("getStatements", function () {
 
     const statements = sqlLimiter.getStatements(procWithSemiBefore);
     assert.equal(statements.length, 2);
-    assert.equal(statements[0], expected1);
+    assert.equal(statements[0].trim(), expected1.trim());
     assert.equal(statements[1].trim(), "CALL ReportTitle1");
   });
 });
