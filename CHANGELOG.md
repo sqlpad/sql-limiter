@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.0.0] - 2022-06-30
+
+- Add support for procedure statements with `BEGIN` and `END` blocks. Procedures are considered terminated when a terminator is found following an END keyword. No API changes, but because this does change parsing behavior this is being released as a major version bump.
+
 ## [2.6.0] - 2021-03-22
 
 - Add `getStatementType` function
