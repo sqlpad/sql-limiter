@@ -93,7 +93,7 @@ function getStatements(sqlText) {
 
   while (next) {
     statement.appendToken(next);
-    if (next.type === "terminator") {
+    if (statement.endReached) {
       statements.push(statement);
       statement = new Statement();
     }
