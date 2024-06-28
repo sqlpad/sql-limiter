@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 const strategies = require("./strategies");
+const offset = require("./offset");
 
 class Statement {
   constructor() {
@@ -135,6 +136,24 @@ class Statement {
         statementToken.parenLevel,
         limitNumber
       );
+    }
+  }
+
+  /**
+   * @param {number} offsetNumber
+   */
+  injectOffset(offsetNumber) {
+    const { statementToken, tokens } = this;
+
+    if (statementToken && statementToken.value === "select") {
+      const offsetToken = offset.has(tokens, statementToken.index);
+      // If offset token exists already, return early
+      if (offsetToken) {
+        return;
+      }
+
+      // Offset clause was not found, so add it
+      this.tokens = offset.add(tokens, statementToken.index, offsetNumber);
     }
   }
 

@@ -21,11 +21,12 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 
 ## API
 
-### `sqlLimiter.limit( sqlText, limitStrategies, limitNumber )`
+### `sqlLimiter.limit( sqlText, limitStrategies, limitNumber, offsetNumber )`
 
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
 - `limitStrategies` - Keyword or array of strategies used to restrict rows. Must be either `limit`, `first`, `top`, `fetch` for `FETCH NEXT`/`FETCH FIRST`.
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
+- `offsetNumber` - Number of rows to skip before beginning to return rows from the query. If number in statement is defined, it is untouched. If missing it is added.
 
 Returns `sqlText` with limits enforced.
 
@@ -49,6 +50,15 @@ const enforcedSql = sqlLimiter.limit(
   100
 );
 console.log(enforcedSql); // SELECT * FROM some_table fetch first 100 rows only;
+
+// When offset is defined
+const enforcedSql = sqlLimiter.limit(
+  `SELECT * FROM some_table;`,
+  "limit",
+  100,
+  10
+);
+console.log(enforcedSql); // SELECT * FROM some_table limit 100 offset 10;
 ```
 
 ### `sqlLimiter.getStatements( sqlText )`
