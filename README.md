@@ -26,7 +26,12 @@ It ignores non-SELECT queries. It understands CTE statements. It understands str
 - `sqlText` - SQL text to enforce limits on. Multiple statements allowed. Only `SELECT` statements are targeted.
 - `limitStrategies` - Keyword or array of strategies used to restrict rows. Must be either `limit`, `first`, `top`, `fetch` for `FETCH NEXT`/`FETCH FIRST`.
 - `limitNumber` - Number of rows to allow. If number in statement is lower, it is untouched. If higher it is lowered to limit. If missing it is added.
-- `offsetNumber` - Number of rows to skip before beginning to return rows from the query. If number in statement is defined, it is untouched. If missing it is added.
+- `offsetNumber` - Number of rows to skip before beginning to return rows from the query. If number in statement is defined, it is untouched. If missing it is added. (optional)
+- `mode` - Mode for enforcing `limitNumber` or `offsetNumber`. Must be either `replace`, `insert`
+  or `cap`. The default is `cap` if not defined.
+  - "replace": Replace existing value. If not existing, it will be inserted.
+  - "insert": Insert if limit or offset are not existing.
+  - "cap": Insert if not existing and if higher it is lowered to the defined value.
 
 Returns `sqlText` with limits enforced.
 

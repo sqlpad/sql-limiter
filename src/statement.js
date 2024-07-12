@@ -88,12 +88,30 @@ class Statement {
     }
   }
 
+  updateExistingNumberToken({ mode, tokens, numberToken, value }) {
+    if (
+      (mode === "cap" && parseInt(numberToken.value, 10) > value) ||
+      mode === "replace"
+    ) {
+      const firstHalf = tokens.slice(0, numberToken.index);
+      const secondhalf = tokens.slice(numberToken.index + 1);
+      this.tokens = [
+        ...firstHalf,
+        { ...numberToken, text: value, value },
+        ...secondhalf,
+      ];
+      return;
+    }
+    return;
+  }
+
   /**
    *
    * @param {Array<String>} strategiesToEnforce
    * @param {Number} limitNumber
+   *  @param {string} [mode]
    */
-  enforceLimit(strategiesToEnforce, limitNumber) {
+  enforceLimit(strategiesToEnforce, limitNumber, mode) {
     const { statementToken, tokens } = this;
 
     strategiesToEnforce.forEach((s) => {
@@ -110,19 +128,13 @@ class Statement {
           statementToken.index
         );
 
-        // If number token, check to see if over the limit and reset it if it is
-        // Otherwise return early
         if (numberToken) {
-          if (parseInt(numberToken.value, 10) > limitNumber) {
-            const firstHalf = tokens.slice(0, numberToken.index);
-            const secondhalf = tokens.slice(numberToken.index + 1);
-            this.tokens = [
-              ...firstHalf,
-              { ...numberToken, text: limitNumber, value: limitNumber },
-              ...secondhalf,
-            ];
-            return;
-          }
+          this.updateExistingNumberToken({
+            mode,
+            tokens,
+            numberToken,
+            value: limitNumber,
+          });
           return;
         }
       }
@@ -141,14 +153,20 @@ class Statement {
 
   /**
    * @param {number} offsetNumber
+   * @param {string} [mode]
    */
-  injectOffset(offsetNumber) {
+  enforceOffset(offsetNumber, mode) {
     const { statementToken, tokens } = this;
 
     if (statementToken && statementToken.value === "select") {
-      const offsetToken = offset.has(tokens, statementToken.index);
-      // If offset token exists already, return early
-      if (offsetToken) {
+      const numberToken = offset.has(tokens, statementToken.index);
+      if (numberToken) {
+        this.updateExistingNumberToken({
+          mode,
+          tokens,
+          numberToken,
+          value: offsetNumber,
+        });
         return;
       }
 
