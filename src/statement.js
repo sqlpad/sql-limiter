@@ -89,10 +89,8 @@ class Statement {
   }
 
   updateExistingNumberToken({ mode, tokens, numberToken, value }) {
-    if (
-      (mode === "cap" && parseInt(numberToken.value, 10) > value) ||
-      mode === "replace"
-    ) {
+    const currentNumber = parseInt(numberToken.value, 10);
+    if ((mode === "cap" && currentNumber > value) || mode === "replace") {
       const firstHalf = tokens.slice(0, numberToken.index);
       const secondhalf = tokens.slice(numberToken.index + 1);
       this.tokens = [
@@ -100,9 +98,19 @@ class Statement {
         { ...numberToken, text: value, value },
         ...secondhalf,
       ];
-      return;
     }
-    return;
+  }
+
+  findLimitNumberToken(strategiesToFind) {
+    const { statementToken, tokens } = this;
+    for (const toFind of strategiesToFind) {
+      const strategyImplementation = strategies[toFind];
+      const numberToken = strategyImplementation.has(
+        tokens,
+        statementToken.index
+      );
+      if (numberToken) return numberToken;
+    }
   }
 
   /**
@@ -121,24 +129,16 @@ class Statement {
     });
 
     if (statementToken && statementToken.value === "select") {
-      for (const toEnforce of strategiesToEnforce) {
-        const strategyImplementation = strategies[toEnforce];
-        const numberToken = strategyImplementation.has(
+      const numberToken = this.findLimitNumberToken(strategiesToEnforce);
+      if (numberToken) {
+        this.updateExistingNumberToken({
+          mode,
           tokens,
-          statementToken.index
-        );
-
-        if (numberToken) {
-          this.updateExistingNumberToken({
-            mode,
-            tokens,
-            numberToken,
-            value: limitNumber,
-          });
-          return;
-        }
+          numberToken,
+          value: limitNumber,
+        });
+        return;
       }
-
       // An existing limit strategy was not found,
       // so take the first one in list of strategies to enforce and add it to tokens
       const preferredStrategy = strategiesToEnforce[0];
@@ -148,7 +148,13 @@ class Statement {
         statementToken.parenLevel,
         limitNumber
       );
+      return limitNumber;
     }
+  }
+
+  findOffsetNumberToken() {
+    const { statementToken, tokens } = this;
+    return offset.has(tokens, statementToken.index);
   }
 
   /**
@@ -159,7 +165,7 @@ class Statement {
     const { statementToken, tokens } = this;
 
     if (statementToken && statementToken.value === "select") {
-      const numberToken = offset.has(tokens, statementToken.index);
+      const numberToken = this.findOffsetNumberToken();
       if (numberToken) {
         this.updateExistingNumberToken({
           mode,
@@ -172,6 +178,7 @@ class Statement {
 
       // Offset clause was not found, so add it
       this.tokens = offset.add(tokens, statementToken.index, offsetNumber);
+      return offsetNumber;
     }
   }
 
