@@ -13,12 +13,7 @@ const getStatements = require("./get-statements");
  * @param {number} [offsetNumber] -- offset number to enforce
  * @returns {string}
  */
-function limit(
-  sqlText,
-  limitStrategies,
-  limitNumber,
-  offsetNumber,
-) {
+function limit(sqlText, limitStrategies, limitNumber, offsetNumber) {
   if (typeof sqlText !== "string") {
     throw new Error("sqlText must be string");
   }
@@ -71,7 +66,7 @@ function getStatementClasses(sqlText) {
   if (typeof sqlText !== "string") {
     throw new Error("sqlText must be string");
   }
-  return getStatements(sqlText)
+  return getStatements(sqlText);
 }
 
 /**
