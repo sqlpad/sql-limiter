@@ -10,9 +10,15 @@ const getStatements = require("./get-statements");
  * @param {string} sqlText - sql text to limit
  * @param {Array<String>|String} limitStrategies -- First strategy value takes priority if no limit exists
  * @param {number} limitNumber -- number to enforce for limit keyword
+ * @param {number} [offsetNumber] -- offset number to enforce
  * @returns {string}
  */
-function limit(sqlText, limitStrategies, limitNumber) {
+function limit(
+  sqlText,
+  limitStrategies,
+  limitNumber,
+  offsetNumber,
+) {
   if (typeof sqlText !== "string") {
     throw new Error("sqlText must be string");
   }
@@ -36,6 +42,9 @@ function limit(sqlText, limitStrategies, limitNumber) {
   return getStatements(sqlText)
     .map((statement) => {
       statement.enforceLimit(strategies, limitNumber);
+      if (typeof offsetNumber === "number") {
+        statement.injectOffset(offsetNumber);
+      }
       return statement.toString();
     })
     .join("");
