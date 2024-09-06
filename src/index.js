@@ -63,6 +63,18 @@ function apiGetStatements(sqlText) {
 }
 
 /**
+ * Splits SQL text on terminator, returning an array of Statement objects
+ * @param {string} sqlText
+ * @returns {Statement[]} Statement objects.
+ */
+function getStatementClasses(sqlText) {
+  if (typeof sqlText !== "string") {
+    throw new Error("sqlText must be string");
+  }
+  return getStatements(sqlText)
+}
+
+/**
  * Removes terminator from SQL statement.
  * Only a single statement allowed.
  * Throws error if multiple statements are included
@@ -106,6 +118,7 @@ function getStatementType(sqlStatement) {
 
 module.exports = {
   getStatements: apiGetStatements,
+  getStatementClasses,
   getStatementType,
   limit,
   removeTerminator,

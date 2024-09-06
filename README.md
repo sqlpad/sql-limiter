@@ -67,6 +67,12 @@ console.log(enforcedSql); // SELECT * FROM some_table limit 100 offset 10;
 
 Returns array of statement strings. Used by `sql-limiter` internally but exposed for your convenience.
 
+### `sqlLimiter.getStatementClasses( sqlText )`
+
+- `sqlText` - SQL text to parse and split into individual statements.
+
+Returns array of statement classes. Exposed for your convenience.
+
 ### `sqlLimiter.removeTerminator( sqlStatement )`
 
 - `sqlStatement` - Single SQL statement text to remove terminator from.
