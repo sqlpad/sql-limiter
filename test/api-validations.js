@@ -63,6 +63,28 @@ describe("api: limit", function () {
     const res = sqlLimiter.limit(original, "limit", 100);
     assert.equal(res, expected);
   });
+
+  it("limit, offset with insert mode", function () {
+    const res = sqlLimiter.limit(
+      `SELECT * from something limit 10000`,
+      ["limit"],
+      100,
+      10,
+      "insert"
+    );
+    assert.equal(res, `SELECT * from something limit 10000 offset 10`);
+  });
+
+  it("limit with replace mode", function () {
+    const res = sqlLimiter.limit(
+      `SELECT * from something limit 10000 offset 10`,
+      ["limit"],
+      100,
+      0,
+      "replace"
+    );
+    assert.equal(res, `SELECT * from something limit 100 offset 0`);
+  });
 });
 
 describe("api: getStatementType", function () {
