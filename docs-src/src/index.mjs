@@ -11,8 +11,6 @@ function renderDiff () {
     (s) => s !== ""
   );
 
-  console.log(strategies, sql, limitNumber)
-
   let diff = new Diff();
   let limited = "";
   let textDiff;
@@ -29,23 +27,13 @@ function renderDiff () {
   }
 
   document.getElementById("sql-out").innerHTML = prettyHtml;
-
-
-  console.log(limited)
-  console.log(textDiff)
-  console.log(prettyHtml)
 }
 
 function onLoad() {
-  const strategy1El = document.getElementById("strategy1");
-  strategy1El.oninput = renderDiff;
-
-  const strategy2El = document.getElementById("strategy2");
-  strategy2El.oninput = renderDiff;
-
+  document.getElementById("strategy1").oninput = renderDiff;
+  document.getElementById("strategy2").oninput = renderDiff;
   document.getElementById("sql-in").oninput = renderDiff;
   document.getElementById("limit-number").oninput = renderDiff;
-
   renderDiff();
 }
 
