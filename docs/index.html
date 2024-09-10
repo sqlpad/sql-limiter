@@ -9,7 +9,7 @@
 
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="stylesheet" href="global.css" />
-  <script defer src="build/bundle.js"></script>
+  <script defer src="build/index.js"></script>
 </head>
 
 <body>
@@ -115,20 +115,20 @@
       </div>
       <div class="m8">
         <label for="limit-number">limit number</label>
-        <input id="limit-number" class="input" type="number" bind:value={limitNumber} />
+        <input id="limit-number" class="input" type="number" />
       </div>
     </div>
 
     <div class="row">
       <div class="col-50 m8">
         <label for="sql-in">input</label>
-        <textarea id="sql-in" class="sql" rows="15" bind:value={original} />
+        <textarea id="sql-in" class="sql" rows="15">asdfasd</textarea>
       </div>
       <div class="col-50 m8">
         <span class="fake-label">result</span>
         <pre class="sql out">
-            <SqlDiff sql={original} strategies={limitStrategies} {limitNumber} />
-          </pre>
+            
+        </pre>
       </div>
     </div>
   </main>
