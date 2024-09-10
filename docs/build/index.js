@@ -441,16 +441,16 @@
           var re = this.re;
           re.lastIndex = index;
           var match = eat(re, buffer);
-          var error2 = this.error;
+          var error = this.error;
           if (match == null) {
-            return this._token(error2, buffer.slice(index, buffer.length), index);
+            return this._token(error, buffer.slice(index, buffer.length), index);
           }
           var group = this._getGroup(match);
           var text = match[0];
-          if (error2.fallback && match.index !== index) {
+          if (error.fallback && match.index !== index) {
             this.queuedGroup = group;
             this.queuedText = text;
-            return this._token(error2, buffer.slice(index, match.index), index);
+            return this._token(error, buffer.slice(index, match.index), index);
           }
           return this._token(group, text, index);
         };
@@ -1102,7 +1102,7 @@
         }
         return nextNonWC;
       }
-      function add(tokens, statementKeywordIndex, targetParenLevel, limitNumber2) {
+      function add(tokens, statementKeywordIndex, targetParenLevel, limitNumber) {
         const firstHalf = tokens.slice(0, statementKeywordIndex + 1);
         const secondhalf = tokens.slice(statementKeywordIndex + 1);
         return [
@@ -1110,7 +1110,7 @@
           createToken.singleSpace(),
           createToken.keyword("first"),
           createToken.singleSpace(),
-          createToken.number(limitNumber2),
+          createToken.number(limitNumber),
           ...secondhalf
         ];
       }
@@ -1250,7 +1250,7 @@
         }
         return nextNonWC;
       }
-      function add(tokens, statementKeywordIndex, targetParenLevel, limitNumber2) {
+      function add(tokens, statementKeywordIndex, targetParenLevel, limitNumber) {
         const firstHalf = tokens.slice(0, statementKeywordIndex + 1);
         const secondhalf = tokens.slice(statementKeywordIndex + 1);
         return [
@@ -1258,7 +1258,7 @@
           createToken.singleSpace(),
           createToken.keyword("top"),
           createToken.singleSpace(),
-          createToken.number(limitNumber2),
+          createToken.number(limitNumber),
           ...secondhalf
         ];
       }
@@ -1402,7 +1402,7 @@
   // ../src/statement.js
   var require_statement = __commonJS({
     "../src/statement.js"(exports, module) {
-      var strategies2 = require_strategies();
+      var strategies = require_strategies();
       var offset = require_offset();
       var Statement = class {
         constructor() {
@@ -1473,7 +1473,7 @@
         findLimitNumberToken(strategiesToFind) {
           const { statementToken, tokens } = this;
           for (const toFind of strategiesToFind) {
-            const strategyImplementation = strategies2[toFind];
+            const strategyImplementation = strategies[toFind];
             const numberToken = strategyImplementation.has(
               tokens,
               statementToken.index
@@ -1487,10 +1487,10 @@
          * @param {Number} limitNumber
          *  @param {string} [mode]
          */
-        enforceLimit(strategiesToEnforce, limitNumber2, mode) {
+        enforceLimit(strategiesToEnforce, limitNumber, mode) {
           const { statementToken, tokens } = this;
           strategiesToEnforce.forEach((s) => {
-            if (!strategies2[s]) {
+            if (!strategies[s]) {
               throw new Error(`Strategy ${s} not supported`);
             }
           });
@@ -1501,18 +1501,18 @@
                 mode,
                 tokens,
                 numberToken,
-                value: limitNumber2
+                value: limitNumber
               });
               return;
             }
             const preferredStrategy = strategiesToEnforce[0];
-            this.tokens = strategies2[preferredStrategy].add(
+            this.tokens = strategies[preferredStrategy].add(
               tokens,
               statementToken.index,
               statementToken.parenLevel,
-              limitNumber2
+              limitNumber
             );
-            return limitNumber2;
+            return limitNumber;
           }
         }
         findOffsetNumberToken() {
@@ -1652,23 +1652,23 @@
   var require_src = __commonJS({
     "../src/index.js"(exports, module) {
       var getStatements = require_get_statements();
-      function limit(sqlText, limitStrategies2, limitNumber2, offsetNumber, mode = "cap") {
+      function limit(sqlText, limitStrategies, limitNumber, offsetNumber, mode = "cap") {
         if (typeof sqlText !== "string") {
           throw new Error("sqlText must be string");
         }
-        if (typeof limitNumber2 !== "number") {
+        if (typeof limitNumber !== "number") {
           throw new Error("limitNumber must be number");
         }
-        let strategies2 = typeof limitStrategies2 === "string" ? [limitStrategies2] : limitStrategies2;
-        if (!Array.isArray(strategies2)) {
+        let strategies = typeof limitStrategies === "string" ? [limitStrategies] : limitStrategies;
+        if (!Array.isArray(strategies)) {
           throw new Error("limitStrategies must be an array or string");
         }
-        if (strategies2.length === 0) {
+        if (strategies.length === 0) {
           throw new Error("limitStrategies must not be empty");
         }
-        strategies2 = strategies2.map((s) => s.toLowerCase());
+        strategies = strategies.map((s) => s.toLowerCase());
         return getStatements(sqlText).map((statement) => {
-          statement.enforceLimit(strategies2, limitNumber2, mode);
+          statement.enforceLimit(strategies, limitNumber, mode);
           if (typeof offsetNumber === "number") {
             statement.enforceOffset(offsetNumber, mode);
           }
@@ -1723,7 +1723,7 @@
   // node_modules/text-diff/diff.js
   var require_diff = __commonJS({
     "node_modules/text-diff/diff.js"(exports, module) {
-      function diff2(options) {
+      function diff(options) {
         var options = options || {};
         this.Timeout = options.timeout || 1;
         this.EditCost = options.editCost || 4;
@@ -1731,8 +1731,8 @@
       var DIFF_DELETE = -1;
       var DIFF_INSERT = 1;
       var DIFF_EQUAL = 0;
-      diff2.Diff;
-      diff2.prototype.main = function(text1, text2, opt_checklines, opt_deadline) {
+      diff.Diff;
+      diff.prototype.main = function(text1, text2, opt_checklines, opt_deadline) {
         if (typeof opt_deadline == "undefined") {
           if (this.Timeout <= 0) {
             opt_deadline = Number.MAX_VALUE;
@@ -1772,7 +1772,7 @@
         this.cleanupMerge(diffs);
         return diffs;
       };
-      diff2.prototype.compute_ = function(text1, text2, checklines, deadline) {
+      diff.prototype.compute_ = function(text1, text2, checklines, deadline) {
         var diffs;
         if (!text1) {
           return [[DIFF_INSERT, text2]];
@@ -1813,7 +1813,7 @@
         }
         return this.bisect_(text1, text2, deadline);
       };
-      diff2.prototype.lineMode_ = function(text1, text2, deadline) {
+      diff.prototype.lineMode_ = function(text1, text2, deadline) {
         var a = this.linesToChars_(text1, text2);
         text1 = a.chars1;
         text2 = a.chars2;
@@ -1861,7 +1861,7 @@
         diffs.pop();
         return diffs;
       };
-      diff2.prototype.bisect_ = function(text1, text2, deadline) {
+      diff.prototype.bisect_ = function(text1, text2, deadline) {
         var text1_length = text1.length;
         var text2_length = text2.length;
         var max_d = Math.ceil((text1_length + text2_length) / 2);
@@ -1946,7 +1946,7 @@
         }
         return [[DIFF_DELETE, text1], [DIFF_INSERT, text2]];
       };
-      diff2.prototype.bisectSplit_ = function(text1, text2, x, y, deadline) {
+      diff.prototype.bisectSplit_ = function(text1, text2, x, y, deadline) {
         var text1a = text1.substring(0, x);
         var text2a = text2.substring(0, y);
         var text1b = text1.substring(x);
@@ -1955,7 +1955,7 @@
         var diffsb = this.main(text1b, text2b, false, deadline);
         return diffs.concat(diffsb);
       };
-      diff2.prototype.linesToChars_ = function(text1, text2) {
+      diff.prototype.linesToChars_ = function(text1, text2) {
         var lineArray = [];
         var lineHash = {};
         lineArray[0] = "";
@@ -1985,7 +1985,7 @@
         var chars2 = diff_linesToCharsMunge_(text2);
         return { chars1, chars2, lineArray };
       };
-      diff2.prototype.charsToLines_ = function(diffs, lineArray) {
+      diff.prototype.charsToLines_ = function(diffs, lineArray) {
         for (var x = 0; x < diffs.length; x++) {
           var chars = diffs[x][1];
           var text = [];
@@ -1995,7 +1995,7 @@
           diffs[x][1] = text.join("");
         }
       };
-      diff2.prototype.commonPrefix = function(text1, text2) {
+      diff.prototype.commonPrefix = function(text1, text2) {
         if (!text1 || !text2 || text1.charAt(0) != text2.charAt(0)) {
           return 0;
         }
@@ -2014,7 +2014,7 @@
         }
         return pointermid;
       };
-      diff2.prototype.commonSuffix = function(text1, text2) {
+      diff.prototype.commonSuffix = function(text1, text2) {
         if (!text1 || !text2 || text1.charAt(text1.length - 1) != text2.charAt(text2.length - 1)) {
           return 0;
         }
@@ -2033,7 +2033,7 @@
         }
         return pointermid;
       };
-      diff2.prototype.commonOverlap_ = function(text1, text2) {
+      diff.prototype.commonOverlap_ = function(text1, text2) {
         var text1_length = text1.length;
         var text2_length = text2.length;
         if (text1_length == 0 || text2_length == 0) {
@@ -2063,7 +2063,7 @@
           }
         }
       };
-      diff2.prototype.halfMatch_ = function(text1, text2) {
+      diff.prototype.halfMatch_ = function(text1, text2) {
         if (this.Timeout <= 0) {
           return null;
         }
@@ -2142,7 +2142,7 @@
         var mid_common = hm[4];
         return [text1_a, text1_b, text2_a, text2_b, mid_common];
       };
-      diff2.prototype.cleanupSemantic = function(diffs) {
+      diff.prototype.cleanupSemantic = function(diffs) {
         var changes = false;
         var equalities = [];
         var equalitiesLength = 0;
@@ -2230,21 +2230,21 @@
           pointer++;
         }
       };
-      diff2.prototype.cleanupSemanticLossless = function(diffs) {
+      diff.prototype.cleanupSemanticLossless = function(diffs) {
         function diff_cleanupSemanticScore_(one, two) {
           if (!one || !two) {
             return 6;
           }
           var char1 = one.charAt(one.length - 1);
           var char2 = two.charAt(0);
-          var nonAlphaNumeric1 = char1.match(diff2.nonAlphaNumericRegex_);
-          var nonAlphaNumeric2 = char2.match(diff2.nonAlphaNumericRegex_);
-          var whitespace1 = nonAlphaNumeric1 && char1.match(diff2.whitespaceRegex_);
-          var whitespace2 = nonAlphaNumeric2 && char2.match(diff2.whitespaceRegex_);
-          var lineBreak1 = whitespace1 && char1.match(diff2.linebreakRegex_);
-          var lineBreak2 = whitespace2 && char2.match(diff2.linebreakRegex_);
-          var blankLine1 = lineBreak1 && one.match(diff2.blanklineEndRegex_);
-          var blankLine2 = lineBreak2 && two.match(diff2.blanklineStartRegex_);
+          var nonAlphaNumeric1 = char1.match(diff.nonAlphaNumericRegex_);
+          var nonAlphaNumeric2 = char2.match(diff.nonAlphaNumericRegex_);
+          var whitespace1 = nonAlphaNumeric1 && char1.match(diff.whitespaceRegex_);
+          var whitespace2 = nonAlphaNumeric2 && char2.match(diff.whitespaceRegex_);
+          var lineBreak1 = whitespace1 && char1.match(diff.linebreakRegex_);
+          var lineBreak2 = whitespace2 && char2.match(diff.linebreakRegex_);
+          var blankLine1 = lineBreak1 && one.match(diff.blanklineEndRegex_);
+          var blankLine2 = lineBreak2 && two.match(diff.blanklineStartRegex_);
           if (blankLine1 || blankLine2) {
             return 5;
           } else if (lineBreak1 || lineBreak2) {
@@ -2306,12 +2306,12 @@
           pointer++;
         }
       };
-      diff2.nonAlphaNumericRegex_ = /[^a-zA-Z0-9]/;
-      diff2.whitespaceRegex_ = /\s/;
-      diff2.linebreakRegex_ = /[\r\n]/;
-      diff2.blanklineEndRegex_ = /\n\r?\n$/;
-      diff2.blanklineStartRegex_ = /^\r?\n\r?\n/;
-      diff2.prototype.cleanupEfficiency = function(diffs) {
+      diff.nonAlphaNumericRegex_ = /[^a-zA-Z0-9]/;
+      diff.whitespaceRegex_ = /\s/;
+      diff.linebreakRegex_ = /[\r\n]/;
+      diff.blanklineEndRegex_ = /\n\r?\n$/;
+      diff.blanklineStartRegex_ = /^\r?\n\r?\n/;
+      diff.prototype.cleanupEfficiency = function(diffs) {
         var changes = false;
         var equalities = [];
         var equalitiesLength = 0;
@@ -2365,7 +2365,7 @@
           this.cleanupMerge(diffs);
         }
       };
-      diff2.prototype.cleanupMerge = function(diffs) {
+      diff.prototype.cleanupMerge = function(diffs) {
         diffs.push([DIFF_EQUAL, ""]);
         var pointer = 0;
         var count_delete = 0;
@@ -2468,7 +2468,7 @@
           this.cleanupMerge(diffs);
         }
       };
-      diff2.prototype.xIndex = function(diffs, loc) {
+      diff.prototype.xIndex = function(diffs, loc) {
         var chars1 = 0;
         var chars2 = 0;
         var last_chars1 = 0;
@@ -2492,7 +2492,7 @@
         }
         return last_chars2 + (loc - last_chars1);
       };
-      diff2.prototype.prettyHtml = function(diffs) {
+      diff.prototype.prettyHtml = function(diffs) {
         var html = [];
         var pattern_amp = /&/g;
         var pattern_lt = /</g;
@@ -2516,7 +2516,7 @@
         }
         return html.join("");
       };
-      diff2.prototype.text1 = function(diffs) {
+      diff.prototype.text1 = function(diffs) {
         var text = [];
         for (var x = 0; x < diffs.length; x++) {
           if (diffs[x][0] !== DIFF_INSERT) {
@@ -2525,7 +2525,7 @@
         }
         return text.join("");
       };
-      diff2.prototype.text2 = function(diffs) {
+      diff.prototype.text2 = function(diffs) {
         var text = [];
         for (var x = 0; x < diffs.length; x++) {
           if (diffs[x][0] !== DIFF_DELETE) {
@@ -2534,7 +2534,7 @@
         }
         return text.join("");
       };
-      diff2.prototype.levenshtein = function(diffs) {
+      diff.prototype.levenshtein = function(diffs) {
         var levenshtein = 0;
         var insertions = 0;
         var deletions = 0;
@@ -2558,7 +2558,7 @@
         levenshtein += Math.max(insertions, deletions);
         return levenshtein;
       };
-      diff2.prototype.toDelta = function(diffs) {
+      diff.prototype.toDelta = function(diffs) {
         var text = [];
         for (var x = 0; x < diffs.length; x++) {
           switch (diffs[x][0]) {
@@ -2575,7 +2575,7 @@
         }
         return text.join("	").replace(/%20/g, " ");
       };
-      diff2.prototype.fromDelta = function(text1, delta) {
+      diff.prototype.fromDelta = function(text1, delta) {
         var diffs = [];
         var diffsLength = 0;
         var pointer = 0;
@@ -2615,39 +2615,46 @@
         }
         return diffs;
       };
-      exports["diff"] = diff2;
+      exports["diff"] = diff;
       exports["DIFF_DELETE"] = DIFF_DELETE;
       exports["DIFF_INSERT"] = DIFF_INSERT;
       exports["DIFF_EQUAL"] = DIFF_EQUAL;
-      module.exports = diff2;
+      module.exports = diff;
     }
   });
 
   // src/index.mjs
   var import_src = __toESM(require_src(), 1);
   var import_text_diff = __toESM(require_diff(), 1);
-  var strategy1 = "limit";
-  var strategy2 = "fetch";
-  var strategy3 = "";
-  var limitNumber = 100;
-  var limitStrategies = [strategy1, strategy2, strategy3].filter(
-    (s) => s !== ""
-  );
-  var sql = "";
-  var diff = new import_text_diff.default();
-  var limited = "";
-  var textDiff;
-  var prettyHtml;
-  var error;
-  try {
-    error = null;
-    limited = import_src.default.limit(sql, strategies, limitNumber);
-    textDiff = diff.main(sql, limited);
-    prettyHtml = diff.prettyHtml(textDiff);
-  } catch (e) {
-    error = e;
+  function renderDiff() {
+    const strategy1 = document.getElementById("strategy1").value;
+    const strategy2 = document.getElementById("strategy2").value;
+    const limitNumber = document.getElementById("limit-number").value;
+    const sql = document.getElementById("sql-in").value;
+    const strategies = [strategy1, strategy2].filter(
+      (s) => s !== ""
+    );
+    let diff = new import_text_diff.default();
+    let limited = "";
+    let textDiff;
+    let prettyHtml;
+    let error;
+    try {
+      error = null;
+      limited = import_src.default.limit(sql, strategies, parseInt(limitNumber, 10));
+      textDiff = diff.main(sql, limited);
+      prettyHtml = diff.prettyHtml(textDiff);
+    } catch (e) {
+      error = e;
+    }
+    document.getElementById("sql-out").innerHTML = prettyHtml;
   }
-  console.log(limited);
-  console.log(textDiff);
-  consosle.log(prettyHtml);
+  function onLoad() {
+    document.getElementById("strategy1").oninput = renderDiff;
+    document.getElementById("strategy2").oninput = renderDiff;
+    document.getElementById("sql-in").oninput = renderDiff;
+    document.getElementById("limit-number").oninput = renderDiff;
+    renderDiff();
+  }
+  window.addEventListener("load", onLoad);
 })();
