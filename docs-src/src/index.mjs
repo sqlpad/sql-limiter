@@ -3,15 +3,13 @@ import Diff from "text-diff";
 
 let strategy1 = "limit";
 let strategy2 = "fetch";
-let strategy3 = "";
 let limitNumber = 100;
-let original = `SELECT * FROM some_table;`;
 
-const limitStrategies = [strategy1, strategy2, strategy3].filter(
+const strategies = [strategy1, strategy2].filter(
 (s) => s !== ""
 );
 
-let sql = "";
+let sql = `SELECT * FROM some_table;`;
 
 let diff = new Diff();
 let limited = "";
@@ -31,4 +29,4 @@ try {
 
 console.log(limited)
 console.log(textDiff)
-consosle.log(prettyHtml)
+console.log(prettyHtml)
