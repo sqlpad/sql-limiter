@@ -1,10 +1,10 @@
 {
-  "name": "svelte-app",
+  "name": "sql-limiter-demo",
   "version": "1.0.0",
   "scripts": {
     "build": "rollup -c && node copy.js",
     "dev": "rollup -c -w",
-    "start": "sirv public"
+    "start": "esbuild src/index.mjs --outdir=../docs/build/bundle.js --bundle --servedir=../docs"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.1.0",
@@ -17,6 +17,7 @@
     "svelte": "^3.59.2"
   },
   "dependencies": {
+    "esbuild": "^0.23.1",
     "eslint": "^9.10.0",
     "mkdirp": "^1.0.4",
     "ncp": "^2.0.0",
