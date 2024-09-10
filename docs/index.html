@@ -89,25 +89,25 @@
     <div class="row">
       <div class="m8">
 
-        <label for={label}>strategy 1</label>
-        <select id={label} class="input" bind:value>
+        <label for="stragey1">strategy 1</label>
+        <select id="strategy1" class="input">
           <option value="">
             none
           </option>
           <option value="fetch">fetch</option>
           <option value="first">first</option>
-          <option value="limit">limit</option>
+          <option value="limit" selected>limit</option>
           <option value="top">top</option>
         </select>
 
       </div>
       <div class="m8">
-        <label for={label}>strategy 2</label>
-        <select id={label} class="input" bind:value>
+        <label for="strategy2">strategy 2</label>
+        <select id="strategy2" class="input">
           <option value="">
             none
           </option>
-          <option value="fetch">fetch</option>
+          <option value="fetch" selected>fetch</option>
           <option value="first">first</option>
           <option value="limit">limit</option>
           <option value="top">top</option>
@@ -115,18 +115,18 @@
       </div>
       <div class="m8">
         <label for="limit-number">limit number</label>
-        <input id="limit-number" class="input" type="number" />
+        <input id="limit-number" class="input" type="number" value="100" />
       </div>
     </div>
 
     <div class="row">
       <div class="col-50 m8">
         <label for="sql-in">input</label>
-        <textarea id="sql-in" class="sql" rows="15">asdfasd</textarea>
+        <textarea id="sql-in" class="sql" rows="15">SELECT * FROM some_table;</textarea>
       </div>
       <div class="col-50 m8">
         <span class="fake-label">result</span>
-        <pre class="sql out">
+        <pre id="sql-out" class="sql out">
             
         </pre>
       </div>
