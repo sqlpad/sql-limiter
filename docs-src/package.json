@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "build": "esbuild src/index.mjs --bundle --outdir=../docs/build",
-    "dev": "rollup -c -w",
     "start": "esbuild src/index.mjs --outdir=../docs/build --bundle --watch --servedir=../docs"
   },
   "dependencies": {

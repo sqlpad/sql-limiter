@@ -26,7 +26,11 @@ function renderDiff () {
     error = e;
   }
 
-  document.getElementById("sql-out").innerHTML = prettyHtml;
+  if (error) {
+    document.getElementById("sql-out").innerText = error.toString();
+  } else {
+    document.getElementById("sql-out").innerHTML = prettyHtml;
+  }
 }
 
 function onLoad() {
