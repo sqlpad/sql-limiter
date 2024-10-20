@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0] - 2024-10-20
+
+- Support injecting offset number
+- Add `getStatementClasses` function
+- Add `mode` parameter
+- Add functions to find limit and offset number token value
+
 ## [3.0.0] - 2022-06-30
 
 - Add support for procedure statements with `BEGIN` and `END` blocks. Procedures are considered terminated when a terminator is found following an END keyword. No API changes, but because this does change parsing behavior this is being released as a major version bump.
